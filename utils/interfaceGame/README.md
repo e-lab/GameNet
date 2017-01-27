@@ -88,7 +88,6 @@ The image interval is set to 0.5s.
 * **initialPosY:** Initial y position of the vehicle (will be redefined to closest road) [integer]
 * **maxDuration:** Duration in hours of the session [integer]
 
-See *Scenario.cpp* for more details on the supported values, especially for car, drivingStyle and initialWeather.
 #### 3.1. Dataset generation description
 The in-game screenshots are stored as RGB PNG format, with the specified width and length of the *config.ini* file. These images are named in order of capture from 1 to undefined. Alongside the images, a file named *dataset.txt* contains a row for each image name, with the labels associated to it separated by spaces. The labels are the following, in the same order:
 
@@ -121,5 +120,3 @@ The in-game screenshots are stored as RGB PNG format, with the specified width a
 
 This code is for runnning forward.
 
-### 5. Change the vehicle
-Lines 33 and 34 of Scenario.cpp tell the script what vehicle to load. http://grandtheftauto.net/gta5/vehicles
