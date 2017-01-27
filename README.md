@@ -75,7 +75,7 @@ array([-0.131395  , -1.        ,  0.38608   ,  0.024159  , -0.052632  ,
 #Steering (steering angle from 1 to -1, right to left, zero is straight ahead)
 #Throttle (gas pedal position from 0 to 1)
 ```
-```
+
 ## Preview dataset [code](https://github.com/wang3303/GTA-V/blob/master/preview_dataset.py)
 
 Dataset link [here](https://drive.google.com/drive/folders/0B2UgaM91sqeAWGZVaDdmaGs2cmM)
