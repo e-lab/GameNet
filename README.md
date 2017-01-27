@@ -46,6 +46,7 @@ GROUP "/" {
    }
 }
 }
+```
 Getting image of first frame:
 ```
 def show_image_read_from_hdf5_file(img):
