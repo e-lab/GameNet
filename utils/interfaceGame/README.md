@@ -69,9 +69,9 @@ The image interval is set to 0.5s.
 ### 2. Game Setup
 * Update GTAV to the last version 
 
-* Copy-paste the contents of *bin/Release* under your GTAV installation directory 
+* Copy-paste the contents of *Release* under your GTAV installation directory 
 
-* Replace your saved game data in *Documents/Rockstar Games/GTA V/Profiles/* with the contents contents of *bin/SaveGame*. 
+* Replace your saved game data in *Documents/Rockstar Games/GTA V/Profiles/* with the contents contents of *SaveGame*. 
 
 * Download *[paths.xml](https://drive.google.com/open?id=0Bzh5djJlCOmMOTA1RVlOXzZ5dEk)* and store it also in the GTAV installation directory. 
 ### 3. Game Configuration
