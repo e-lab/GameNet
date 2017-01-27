@@ -17,3 +17,4 @@ Project members are: Abhishek Chaurasia, Eugenio Culurciello, Karan Dwivedi, and
 
 First use [utility](utils) folder to interface your system with any game and then prepare dataset compatible for GameNet.
 Next, go to [train](train) folder to train your  neural network.
+
