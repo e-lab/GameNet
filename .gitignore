@@ -1,0 +1,14 @@
+#Files
+*.sh
+*.eps
+*.log
+*.dot
+*.svg
+*.t7
+*.sw*
+*.so
+*.o
+*.txt
+*.net
+.DS_Store
+*.*~
