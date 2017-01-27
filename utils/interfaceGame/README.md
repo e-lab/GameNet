@@ -119,5 +119,7 @@ The in-game screenshots are stored as RGB PNG format, with the specified width a
 ### 4. Server Setup
 [Sever code](https://github.com/e-lab/GameNet/blob/wang3303-patch-1/utils/interfaceGame/drive.py)
 
+This code is for runnning forward.
+
 ### 5. Change the vehicle
 Lines 33 and 34 of Scenario.cpp tell the script what vehicle to load. http://grandtheftauto.net/gta5/vehicles
