@@ -117,4 +117,7 @@ The in-game screenshots are stored as RGB PNG format, with the specified width a
 * **General (2):** It is a combination of the other two, the vehicle will try to stay in lane while maintaining a certain speed, the agressivity configuration option sets how the two partial rewards are averaged. The more agressivity the more reward will be given for keeping the speed and less to stay in lane (i.e. tendence to overtake other vehicles)
 
 ### 4. Server Setup
-[Sever code]()
+[Sever code](https://github.com/e-lab/GameNet/blob/wang3303-patch-1/utils/interfaceGame/drive.py)
+
+### 5. Change the vehicle
+Lines 33 and 34 of Scenario.cpp tell the script what vehicle to load. http://grandtheftauto.net/gta5/vehicles
