@@ -13,7 +13,7 @@ from torch.autograd import Variable
 import torchvision.transforms as T
 
 
-class Actor(nn.Module):
+class Critic(nn.Module):
     def __init__(self, width=320, height=160, channels=3):
         super(Policy, self).__init__()
 		# Matchnet here

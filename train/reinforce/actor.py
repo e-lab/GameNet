@@ -18,8 +18,7 @@ class Actor(nn.Module):
         super(Policy, self).__init__()
 		# Matchnet here
         self.affine1 = nn.Linear(4, 128)
-        self.action_head = nn.Linear(128, 7)
-        self.value_head = nn.Linear(128, 1)
+        self.action_head = nn.Linear(128, 2)
 
 		# INPUT SIZE
 		self.width = width
@@ -31,4 +30,4 @@ class Actor(nn.Module):
         action_scores = self.action_head(x)
         state_values = self.value_head(x)
 		
-        return F.softmax(action_scores), state_values
+        return F.tanh(action_scores)
