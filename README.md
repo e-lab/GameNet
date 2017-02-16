@@ -1,7 +1,7 @@
 # GameNet
 
 This project aims at developing neural network for end-to-end training, i.e. the network will get whole image as input and the output will be desired sensor values (acceleration, speed, direction, etc).
-Since it is difficult to obtain dataset with these sensor values from real vehicle, and it is even more difficult to run multiple tests on actual road; we will be using games with high graphics quality to do analyze our network performace.
+Since it is difficult to obtain dataset with these sensor values from real vehicle, and it is even more difficult to run multiple tests on actual road; we will be using games with high graphics quality to do analyze our network performance.
 
 There are multiple goals of this project:
 
