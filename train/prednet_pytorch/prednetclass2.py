@@ -66,14 +66,17 @@ class Prednet(nn.Module):
             )
         for l in range(0, self.number_of_layers):
             p = self.params[l]
-            input_projection = l == 0 and input or F.relu(F.max_pool2d(F.conv2d(error[l-1],p['convA.weight'],p['convA.bias'], padding=1), 2, 2))
+            # Feeding Ahat of previous layer as input in this layer
+            input_projection = l == 0 and input or F.relu(F.max_pool2d(F.conv2d(state_projection,p['convA.weight'],p['convA.bias'], padding=1), 2, 2))
             state_projection = l == 0 and F.hardtanh(F.conv2d(state[l][0],p['convAhat.weight'],p['convAhat.bias'],padding=1),0,1) \
                 or F.relu(F.conv2d(state[l][0],p['convAhat.weight'],p['convAhat.bias'],padding=1))
             
             error[l] = F.relu(torch.cat((input_projection - state_projection, state_projection - input_projection),1))
+        
         p = self.params[self.number_of_layers]
-        conv = F.conv2d(error[-1], p['conv_weight'], p['conv_bias'],stride = 2, padding=0)
-        conv1 = F.conv2d(error[-1], p['conv1_weight'], p['conv1_bias'],stride = 1, padding=0)
+        # Sensor classifier is mounted over R3
+        conv = F.conv2d(state[2][0], p['conv_weight'], p['conv_bias'],stride = 2, padding=0)
+        conv1 = F.conv2d(state[2][0], p['conv1_weight'], p['conv1_bias'],stride = 1, padding=0)
         conv2 = F.conv2d(conv1, p['conv2_weight'], p['conv2_bias'],stride = 2, padding=1)
         conv3 = F.conv2d(conv2, p['conv3_weight'], p['conv3_bias'],stride = 1, padding=0)
         merge = conv+conv3
@@ -111,7 +114,7 @@ class Prednet(nn.Module):
                 }
 
                 if l > 0:
-                    self.params[l]['convA.weight'] = self.conv_init(self.Ahat_size_list[l], 2*self.Ahat_size_list[l-1], 3)
+                    self.params[l]['convA.weight'] = self.conv_init(self.Ahat_size_list[l], self.Ahat_size_list[l-1], 3)
                     self.params[l]['convA.bias'] = torch.zeros(self.Ahat_size_list[l])
 
                 
@@ -144,7 +147,7 @@ class Prednet(nn.Module):
 
 
     def train(self,input_sequence,target_sequence,target_parameter):
-        print('\n---------- Train a'+str(self.number_of_layers)+'layer network ----------')
+        print('\n---------- Train a '+str(self.number_of_layers)+' layer network ----------')
         print('Input has size', list(input_sequence.data.size()))
         print('Create a MSE criterion')
 
@@ -161,9 +164,10 @@ class Prednet(nn.Module):
             
             for t in range(0, self.T):
                 error, state, predict_parameter = self.forward(input_sequence[t], error, state,)
+               
                 loss += self.loss_fn(error[0], target_sequence[t])
                 loss += self.loss_fn(predict_parameter,target_parameter[t])
-
+            print state[2][0].data.size()
 
             print(' > Epoch {:2d} loss: {:.3f}'.format((epoch + 1), loss.data[0]))
 
