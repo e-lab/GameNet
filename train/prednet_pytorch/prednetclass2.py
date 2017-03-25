@@ -5,10 +5,54 @@ import math
 import torch.nn as nn
 import pickle
 import torch.optim as optim
-
+from torch.utils.data import TensorDataset,DataLoader,Dataset
+import numpy as np
+from PIL import Image
+import torchvision.transforms as T
 torch.manual_seed(0)
 
 USE_CUDA = torch.cuda.is_available()
+if USE_CUDA ==0:
+    print "WARNING:CUDA IS NOT AVAILABLE"
+trans=T.Compose([
+            T.Scale(128),T.CenterCrop(128), T.ToTensor()
+                             ])
+
+def transform(num):
+    filename = '/media/HDD1/Datasets/GTA/2/'+str(num)+ '.png'
+    im = Image.open(filename)
+    return trans(im)#.unsqueeze(0)
+
+class MyDataset(Dataset):
+    def __init__(self,len = 10,batch = 10,max=30116,):
+        self.length = len
+        self.max = max
+        self.batch = batch
+        self.fname = '/media/HDD1/Datasets/GTA/2/dataset.txt'
+        self.target = np.loadtxt(self.fname)
+        self.targetdata = torch.from_numpy(self.target)
+        self.targetdata = self.targetdata[0:max,1:8]
+
+    def get(self, idx):
+        traindata = torch.zeros(self.length,3,128,128)
+        index = 0
+        for i in range(idx,self.length+idx):
+            img = transform(i)
+            img = img[0:3]
+            traindata[index-1] = img
+            index +=1
+        target = self.targetdata[idx:idx+self.length]
+        return traindata,target
+
+    def getbatch(self):
+        rand = np.random.randint(1,self.max,size = (self.batch))
+        inputd = torch.zeros(self.length,self.batch,3,128,128)
+        target = torch.zeros(self.length,self.batch,7)
+        idx = 0
+        for i in rand:
+            inputd[:,idx,:,:,:],target[:,idx,:] = self.get(i)
+            idx =1+idx
+        return Variable(inputd),Variable(target)
 
 class Variable(Variable):
     def __init__(self, data, *args, **kwargs):
@@ -17,13 +61,13 @@ class Variable(Variable):
         super(Variable, self).__init__(data, *args, **kwargs)
 
 class Prednet(nn.Module):
-    def __init__(self, width_ratio=4, height_ratio=6, channels=3):
+    def __init__(self, width_ratio=4, height_ratio=6, channels=3,batch=1,epoch = 10):
         super(Prednet, self).__init__()
         ## All the parameters below can be intialized in the __init__
-        self.T = 10  # sequence length
-        self.max_epoch = 10
+        self.T = 4  # sequence length
+        self.max_epoch = epoch
         self.lr = 1e-2
-        self.batch_size = 1
+        self.batch_size = batch
         self.number_of_layers = 3
         self.R_size_list = [16,32,64] # channels of prediction of lstm
         self.Ahat_size_list = [channels,64,32] # channels of Ahat(l)
@@ -34,12 +78,13 @@ class Prednet(nn.Module):
         self.loss_fn = torch.nn.MSELoss()
         self.output_channels = channels*2
         self.exp = 7
-        self.sensor_number = 6
-        self.save_weights_interval = 5
+        self.sensor_number = 7
+        self.save_weights_interval = 10
         self.initParams()
         self.optimizer = optim.SGD([
                 weights for dic in self.params for weights in dic.values()
             ], lr=self.lr, momentum=0.9)
+        self.dset = MyDataset(self.T,self.batch_size)
 
     # From pytorch LSTMCell
     def lstm(self,input, hidden, w_ih, w_hh, b_ih=None, b_hh=None, padding=0):
@@ -146,13 +191,17 @@ class Prednet(nn.Module):
 
 
 
-    def train(self,input_sequence,target_sequence,target_parameter):
+    def train(self,):
+        target_sequence = Variable(torch.zeros(net.T, net.batch_size, net.output_channels, net.width_ratio * 2 ** 7, net.height_ratio * 2 ** 7))
+        input_sequence,target_parameter = self.dset.getbatch()
+        # target_sequence = Variable(torch.zeros(input_sequence.size()))
         print('\n---------- Train a '+str(self.number_of_layers)+' layer network ----------')
-        print('Input has size', list(input_sequence.data.size()))
+        print('Input has size', input_sequence.size())
         print('Create a MSE criterion')
 
         print('Run for', self.max_epoch, 'iterations')
         for epoch in range(0, self.max_epoch):
+            input_sequence,target_parameter = self.dset.getbatch()
             self.optimizer.zero_grad() # zero the gradient buffers
             loss = 0
             error = [Variable(torch.zeros(self.batch_size,2*self.Ahat_size_list[l],self.width_ratio*2 **(self.exp-l),self.height_ratio*2 **(self.exp-l)))
@@ -181,8 +230,9 @@ class Prednet(nn.Module):
 
 
 if __name__ == '__main__':
-    net = Prednet(1,1,3)
-    input_sequence = Variable(torch.rand(net.T, net.batch_size, net.channels, net.width_ratio * 2**7, net.height_ratio * 2**7))
-    target_sequence = Variable(torch.zeros(net.T, net.batch_size, net.output_channels, net.width_ratio * 2 ** 7, net.height_ratio * 2 ** 7))
-    target_parameter = Variable(torch.zeros(net.T,net.batch_size,6))
-    net.train(input_sequence,target_sequence,target_parameter)
+    net = Prednet(
+        1,1,3,
+        batch = 64,
+        epoch = 100000
+        )
+    net.train()
