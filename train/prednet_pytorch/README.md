@@ -1,4 +1,20 @@
 # Prednet for self-driving
+## Content
+
+#### media
+
+-Sample prednet image and video
+
+#### m_1(Modified prednet sending R1 to sensor reading classifier)
+
+#### m_3(Modified prednet sending R1,R2,R3 to sensor reading classifier)
+
+#### o_1(Original prednet sending R1 to sensor reading classifier)
+
+#### o_3(Original prednet sending R1,R2,R3 to sensor reading classifier)
+
+python ___.py to run the corresponding code.(python 2.7)
+
 ## January
 
 + Set up environment for data collecting
@@ -34,10 +50,10 @@
 + Finish training for original and modified prednet with (20k batches)
 
 * input
-![](https://github.com/e-lab/GameNet/blob/master/train/prednet_pytorch/input.png)
+![](https://github.com/e-lab/GameNet/blob/master/train/prednet_pytorch/media/input.png)
 
 * prediction
-![](https://github.com/e-lab/GameNet/blob/master/train/prednet_pytorch/preview.png)
+![](https://github.com/e-lab/GameNet/blob/master/train/prednet_pytorch/media/preview.png)
 
 + Problem identified: Sensor fitting is not ideal.
 
