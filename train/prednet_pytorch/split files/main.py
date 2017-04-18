@@ -4,6 +4,8 @@
 # train to predict sensor reading from Grand Theft Auto V 
 #
 
+
+# Python imports
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -16,11 +18,14 @@ import numpy as np
 from PIL import Image
 import torchvision
 from torchvision.utils import save_image
-
-from model_prednet import Prednet
-
 # import matplotlib.pyplot as plt
 # import matplotlib.image as mpimg
+
+# Local imports
+# from opts import get_args # Get all the input arguments
+from model_prednet import Prednet
+
+
 #torch.manual_seed(0)
 
 torch.cuda.set_device(1)
@@ -166,13 +171,12 @@ def train(net):
             
 
 if __name__ == '__main__':
-    net = Prednet(2,1,3)
+    net = Prednet(2,1,3, batch = 8)
     net.optimizer = optim.SGD([
                 weights for dic in net.params for weights in dic.values()
             ], lr=1e-2, momentum=0.9)
     net.dset = MyDataset(net.T, net.batch_size)
     net.max_epoch = 30
-    net.batch = 8
     net = net.cuda()
     train(net)
     # model = torch.nn.DataParallel(net,device_ids=[0, 1, 2])
