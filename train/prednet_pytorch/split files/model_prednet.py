@@ -4,11 +4,6 @@ from torch.autograd import Variable
 import math
 import torch.nn as nn
 import pickle
-# import torch.optim as optim
-# from torch.utils.data import TensorDataset,DataLoader,Dataset
-# import numpy as np
-# from PIL import Image
-# import torchvision
 from torchvision.utils import save_image
 
 class Prednet(nn.Module):
@@ -16,7 +11,6 @@ class Prednet(nn.Module):
         super(Prednet, self).__init__()
         ## All the parameters below can be intialized in the __init__
         self.T = 20  # sequence length
-        self.lr = 1e-2
         self.number_of_layers = 3
         self.R_size_list = [16,32,64] # channels of prediction of lstm
         self.Ahat_size_list = [channels,64,32] # channels of Ahat(l)
@@ -24,12 +18,8 @@ class Prednet(nn.Module):
         self.width_ratio = width_ratio # width=width_ratio*2**exp
         self.height_ratio = height_ratio # height=height_ratio*2**exp
         self.channels = channels
-        self.loss_fn = torch.nn.MSELoss()
-        self.loss_fn = self.loss_fn.cuda()
+        self.loss_fn = torch.nn.MSELoss().cuda()
         self.output_channels = channels*2
-        self.exp = 7
-        self.sensor_number = 7
-        self.save_weights_interval = 1000
         self.initParams()
         self.norm32 = nn.BatchNorm2d(32)
         self.norm128 = nn.BatchNorm2d(128)

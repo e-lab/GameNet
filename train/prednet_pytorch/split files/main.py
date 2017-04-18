@@ -1,3 +1,9 @@
+# Eugenio Culurciello, April 2017
+# Code original: XinRui Wang
+#
+# train to predict sensor reading from Grand Theft Auto V 
+#
+
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -10,10 +16,13 @@ import numpy as np
 from PIL import Image
 import torchvision
 from torchvision.utils import save_image
+
 from model_prednet import Prednet
+
 # import matplotlib.pyplot as plt
 # import matplotlib.image as mpimg
 #torch.manual_seed(0)
+
 torch.cuda.set_device(1)
 
 USE_CUDA = torch.cuda.is_available()
@@ -160,7 +169,7 @@ if __name__ == '__main__':
     net = Prednet(2,1,3)
     net.optimizer = optim.SGD([
                 weights for dic in net.params for weights in dic.values()
-            ], lr=net.lr, momentum=0.9)
+            ], lr=1e-2, momentum=0.9)
     net.dset = MyDataset(net.T, net.batch_size)
     net.max_epoch = 30
     net.batch = 8
