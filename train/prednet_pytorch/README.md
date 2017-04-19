@@ -1,19 +1,41 @@
 # Prednet for self-driving
-## Content
+## Dependencies
+
+ + [*pytorch*](http://pytorch.org)
+
+```
+# for python 3.5 and cuda 8.0
+pip install http://download.pytorch.org/whl/cu80/torch-0.1.11.post5-cp35-cp35m-linux_x86_64.whl 
+pip install torchvision
+```
+
+### Options
+```
+    parser = ArgumentParser(description='e-Lab Gesture Recognition Script')
+    _ = parser.add_argument
+    _('--datadir',  type=str,   default='/home/elab/Datasets/GTAV/2/', help='dataset location')
+    _('--savedir',  type=str,   default='/home/elab/Datasets/GTAV/2/', help='folder to save outputs')
+    _('--model',    type=str,   default='models/model.py')
+    _('--fileNum',  type=int,   default=30116)
+    _('--batchSize',type=int,   default=16)
+    _('--seqLen',   type=int,   default=10)
+    _('--dim',      type=int,   default=(256, 144), nargs=2, help='input image dimension as tuple (HxW)', metavar=('W', 'H'))
+    _('--lr',       type=float, default=1e-2, help='learning rate')
+    _('--eta',      type=float, default=0.9, help='momentum')
+    _('--seed',     type=int,   default=1, help='seed for random number generator')
+    _('--epochs',   type=int,   default=30, help='# of epochs you want to run')
+    _('--devID',    type=int,   default=0, help='GPU ID to be used')
+    _('--cuda',     type=bool,  default=True, help='use CUDA')
+```
+
+```
+python3 main.py 
+```
 
 #### media
 
 -Sample prednet image and video
 
-#### m_1(Modified prednet sending R1 to sensor reading classifier)
-
-#### m_3(Modified prednet sending R1,R2,R3 to sensor reading classifier)
-
-#### o_1(Original prednet sending R1 to sensor reading classifier)
-
-#### o_3(Original prednet sending R1,R2,R3 to sensor reading classifier)
-
-python ___.py to run the corresponding code.(python 2.7)
 
 ## January
 
