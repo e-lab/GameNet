@@ -153,3 +153,74 @@ class Prednet(nn.Module):
             for l in range(0,self.number_of_layers+1):
                 for k,v in self.params[l].items():
                         self.params[l][k] = Variable(v, requires_grad=True)
+
+    def save_weight(self):
+        torch.save(self.params, 'prednet_weights')
+        print("Saved weights!")
+
+
+    def train(self, datapoints):
+        target_sequence = Variable(torch.zeros(self.T, self.batch_size, self.output_channels, self.height_ratio * 2 ** 7, self.width_ratio * 2 ** 7).cuda())
+        input_sequence, target_parameter = self.dset.getbatch()
+        # target_sequence = Variable(torch.zeros(input_sequence.size()))
+        print('\n---------- Train a '+str(self.number_of_layers)+' layer network ----------')
+        print('Input sequence has size', input_sequence.size())
+        print('Target sequence has size', target_sequence.size())
+        print('Target has size', target_parameter.size())
+        print('Create a MSE criterion')
+
+        print('Run for', self.max_epoch, 'Epoch')
+        
+        for epoch in range(0, self.max_epoch):
+            self.dset.shuffle()
+            #totloss = 0
+        
+            self.save_weight()
+
+            for batch in range(0, int(datapoints/self.T/self.batch_size)-1):
+                input_sequence, target_parameter = self.dset.getbatch()
+                self.optimizer.zero_grad() # zero the gradient buffers
+                loss = 0
+                loss1 = 0
+                loss2 = 0
+
+                error = [Variable(torch.zeros(self.batch_size, 2*self.Ahat_size_list[l], self.height_ratio*2 **(self.exp-l), self.width_ratio*2 **(self.exp-l)).cuda())
+                    for l in range(0, self.number_of_layers)]
+                
+                state = [(
+                    Variable(torch.zeros(self.batch_size, self.R_size_list[l], self.height_ratio*2 **(self.exp-l), self.width_ratio*2 **(self.exp-l)).cuda()),
+                    Variable(torch.zeros(self.batch_size, self.R_size_list[l], self.height_ratio*2 **(self.exp-l), self.width_ratio*2 **(self.exp-l)).cuda())
+                    ) for l in range(0, self.number_of_layers)]
+                
+                for t in range(0, self.T):
+                    # repackage
+                    for l in range(0, self.number_of_layers):
+                        state[l] = (Variable(state[l][0].data), Variable(state[l][1].data))
+                        error[l] = Variable(error[l].data)
+                    error, state, predict_parameter = self.forward(input_sequence[t], error, state)
+
+                    # if t != 0:
+                    #     ax = fig.add_subplot( 111 )
+                    #     im = ax.imshow(np.zeros((128, 256*2, 3)))
+                    #     img=mpimg.imread(str(t)+'.png')
+                    #     im.set_data(img)
+                    #     param = "Steering:%f\nThrottle:%f" % (target_parameter[t][3],target_parameter[t][4])
+                    #     txt1 = ax.text(20,30,speed,style='italic',
+                    #         bbox={'facecolor':'red', 'alpha':0.5, 'pad':10})
+                    #     param_real = "Steering:%f\nThrottle:%f" % (predict_parameter[t][3],predict_parameter[t][4])
+                    #     txt2 = ax.text(20,158,speed,style='italic',
+                    #         bbox={'facecolor':'red', 'alpha':0.5, 'pad':10})
+                    #     plt.savefig(str(t)+'.png')
+                    
+                    if t != 0:
+                        loss1 += self.loss_fn(error[0], target_sequence[t])
+                        loss2 += self.loss_fn(predict_parameter, target_parameter[t])
+                
+                print(' >>> Batch {:2d} image_loss: {:.3f} sensor_loss: {:.3f}'.format((batch + 1), loss1.data[0], loss2.data[0]))
+                #totloss = totloss + loss
+                loss = loss1+loss2
+                loss.backward()
+                self.optimizer.step()
+                # if batch % 100 == 0:
+                #     self.save_weight()
+                # print(' > Epoch {:2d} loss: {:.3f}'.format((batch + 1), loss.data[0]))
