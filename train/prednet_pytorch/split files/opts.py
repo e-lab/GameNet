@@ -14,6 +14,7 @@ def get_args():
     _('--channels', type=int,   default=3)
     _('--height',   type=int,   default=128)
     _('--width',    type=int,   default=256)
+    _('--sensors',  type=int,   default=7)
     _('--fileNum',  type=int,   default=30116)
     _('--batchSize',type=int,   default=16)
     _('--seqLen',   type=int,   default=10)

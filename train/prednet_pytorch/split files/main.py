@@ -78,8 +78,7 @@ class MyDataset(Dataset):
         self.target_mean = self.target.mean(axis=0)
         self.target_std = self.target.std(axis=0)
         self.targetdata = (self.target[0:self.max,1:8]-self.target_mean[1:8])/self.target_std[1:8]
-        self.rand = np.arange(int(self.max/self.length))
-        self.rand = self.rand*self.length+1
+        self.rand = np.arange(int(self.max/self.length))*self.length+1
         self.counter = 0
 
     def shuffle(self,):     
@@ -104,7 +103,7 @@ class MyDataset(Dataset):
 
     def getbatch(self):     
         inputd = torch.zeros(self.length, self.batch, args.channels, args.height, args.width)
-        target = torch.zeros(self.length, self.batch, 7)
+        target = torch.zeros(self.length, self.batch, args.sensors)
         idx = 0
         for i in self.rand[ self.counter*self.batch : (self.counter+1)*self.batch ]:
             inputd[:,idx,:,:,:], target[:,idx,:] = self.get(i)
@@ -113,15 +112,13 @@ class MyDataset(Dataset):
         # print(self.rand[self.counter*self.batch])
         return Variable(inputd.cuda()), Variable(target.cuda())
 
-
-            
-            
+     
 
 if __name__ == '__main__':
     net = Prednet(2,1,3, batch=args.batchSize, seq=args.seqLen)
-    net.optimizer = optim.SGD([
+    net.optimizer = optim.Adam([
                 weights for dic in net.params for weights in dic.values()
-            ], lr=args.lr, momentum=args.eta)
+            ])#, lr=args.lr)#, momentum=args.eta)
     net.dset = MyDataset(net.T)
     net.max_epoch = args.epochs
     net = net.cuda()
