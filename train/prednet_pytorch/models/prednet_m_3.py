@@ -4,89 +4,13 @@ from torch.autograd import Variable
 import math
 import torch.nn as nn
 import pickle
-import torch.optim as optim
-from torch.utils.data import TensorDataset,DataLoader,Dataset
-import numpy as np
-from PIL import Image
-import torchvision.transforms as T
 from torchvision.utils import save_image
-# import matplotlib.pyplot as plt
-# import matplotlib.image as mpimg
-#torch.manual_seed(0)
-torch.cuda.set_device(1)
-
-USE_CUDA = torch.cuda.is_available()
-if USE_CUDA ==0:
-    print "WARNING:CUDA IS NOT AVAILABLE"
-trans=T.Compose([
-            T.Scale(128),T.ToTensor()
-                             ])
-dtype = torch.cuda.FloatTensor
-
-class Variable(Variable):
-    def __init__(self, data, *args, **kwargs):
-        if USE_CUDA:
-            data.cuda()
-        super(Variable, self).__init__(data, *args, **kwargs)
-
-def transform(num):
-    filename = '/media/HDD1/Datasets/GTA/2/'+str(num)+ '.png'
-    im = Image.open(filename)
-    return trans(im)#.unsqueeze(0)
-
-class MyDataset(Dataset):
-    def __init__(self,len = 10,batch = 10,max=30116,):
-        self.length = len
-        self.max = max
-        self.batch = batch
-        self.fname = '/media/HDD1/Datasets/GTA/2/dataset.txt'
-        self.target = np.loadtxt(self.fname)
-        self.target_mean = np.array([12.3,-0.0218,0.224,0.007117,0.268,-0.5638,-0.042])
-        self.target_std = np.array([9.54,3.18,0.404,0.0817,0.3564,7.8035,0.8895])
-        self.targetdata = torch.from_numpy((self.target[0:max,1:8]-self.target_mean)/self.target_std)
-        #self.targetdata = self.targetdata[0:max,1:8]
-        self.rand = np.arange(self.max/self.length)
-        self.rand = self.rand*self.length+1
-        self.counter = 0
-
-    def shuffle(self,):     
-        np.random.shuffle(self.rand)
-        self.counter = 0
-
-    def get_sensorreading(self,output):
-        pass
-        # return output*self.target_std+self.target_mean
-
-    def get(self, idx):
-        traindata = torch.zeros(self.length,3,128,256)
-        index = 0
-        for i in range(idx,self.length+idx):
-            img = transform(i)
-            img = img[0:3]
-            traindata[index-1] = img
-            index +=1
-        target = self.targetdata[idx:idx+self.length]
-        # save_image(traindata,'train.png')
-        return traindata,target
-
-    def getbatch(self):
-        
-        inputd = torch.zeros(self.length,self.batch,3,128,256)
-        target = torch.zeros(self.length,self.batch,7)
-        idx = 0
-        for i in self.rand[self.counter*self.batch:(self.counter+1)*(self.batch)]:
-            inputd[:,idx,:,:,:],target[:,idx,:] = self.get(i)
-            idx =1+idx
-        self.counter+=1
-        print self.rand[self.counter*self.batch]
-        return Variable(inputd.cuda()),Variable(target.cuda())
 
 class Prednet(nn.Module):
-    def __init__(self, width_ratio=4, height_ratio=6, channels=3,batch=1,epoch = 10):
+    def __init__(self, width_ratio=4, height_ratio=6, channels=3, batch=20, seq=10):
         super(Prednet, self).__init__()
         ## All the parameters below can be intialized in the __init__
-        self.T = 20  # sequence length
-        self.max_epoch = epoch
+        self.T = seq  # sequence length
         self.lr = 1e-2
         self.batch_size = batch
         self.number_of_layers = 3
@@ -103,10 +27,6 @@ class Prednet(nn.Module):
         self.sensor_number = 7
         self.save_weights_interval = 1000
         self.initParams()
-        self.optimizer = optim.SGD([
-                weights for dic in self.params for weights in dic.values()
-            ], lr=self.lr, momentum=0.9)
-        self.dset = MyDataset(self.T,self.batch_size)
         self.norm32 = nn.BatchNorm2d(32)
         self.norm128 = nn.BatchNorm2d(128)
         self.norm16 = nn.BatchNorm2d(16)
@@ -138,8 +58,8 @@ class Prednet(nn.Module):
             )
         for l in range(0, self.number_of_layers):
             p = self.params[l]
-            # Feeding Ahat of previous error as input in this layer
-            input_projection = l == 0 and input or F.relu(F.max_pool2d(F.conv2d(error[l-1],p['convA.weight'],p['convA.bias'], padding=1), 2, 2))
+            # Feeding Ahat of previous layer as input in this layer
+            input_projection = l == 0 and input or F.relu(F.max_pool2d(F.conv2d(state_projection,p['convA.weight'],p['convA.bias'], padding=1), 2, 2))
             state_projection = l == 0 and F.hardtanh(F.conv2d(state[l][0],p['convAhat.weight'],p['convAhat.bias'],padding=1),0,1) \
                 or F.relu(F.conv2d(state[l][0],p['convAhat.weight'],p['convAhat.bias'],padding=1))
             if l == 0 and self.count % self.T != 0 :
@@ -158,10 +78,17 @@ class Prednet(nn.Module):
         # print state[0][0].size()
         # print state[1][0].size()
         # print state[2][0].size()
-        mp = nn.MaxPool2d(4, stride=4)
-        maxp = mp(state[0][0])
-        maxp = F.conv2d(maxp, p['preconv_weight'], p['preconv_bias'],stride = 1, padding=0)
-        maxp = self.norm16(maxp)
+        mp4 = nn.MaxPool2d(4, stride = 4)
+        mp2 = nn.MaxPool2d(2, stride = 2)
+        maxp1 = mp4(state[0][0])
+        maxp1 = F.conv2d(maxp1, p['preconv1_weight'], p['preconv1_bias'],stride = 1, padding=0)
+        maxp1 = self.norm16(maxp1)
+        maxp2 = mp2(state[1][0])
+        maxp2 = F.conv2d(maxp2, p['preconv2_weight'], p['preconv2_bias'],stride = 1, padding=0)
+        maxp2 = self.norm16(maxp2)
+        maxp3 = F.conv2d(state[2][0], p['preconv3_weight'], p['preconv3_bias'],stride = 1, padding=0)
+        maxp3 = self.norm16(maxp3)
+        maxp = torch.cat((maxp1,maxp2,maxp3),1)
         maxp = F.relu(maxp)
         conv = F.conv2d(maxp, p['conv_weight'], p['conv_bias'],stride = 2, padding=0)
         conv = self.norm32(conv)
@@ -207,19 +134,23 @@ class Prednet(nn.Module):
                 }
 
                 if l > 0:
-                    self.params[l]['convA.weight'] = self.conv_init(self.Ahat_size_list[l], 2*self.Ahat_size_list[l-1], 3)
+                    self.params[l]['convA.weight'] = self.conv_init(self.Ahat_size_list[l], self.Ahat_size_list[l-1], 3)
                     self.params[l]['convA.bias'] = torch.zeros(self.Ahat_size_list[l]).cuda()
 
                 
             self.params[self.number_of_layers]={
             # weights for subsequent conv and fully connected layers
-            'preconv_weight':     self.conv_init(self.R_size_list[0], self.R_size_list[0], 1),
-            'preconv_bias':       torch.zeros(self.R_size_list[0]).cuda(),
+            'preconv1_weight':     self.conv_init(self.R_size_list[0], self.R_size_list[0], 1),
+            'preconv1_bias':       torch.randn(self.R_size_list[0]).cuda(),
+            'preconv2_weight':     self.conv_init(16, self.R_size_list[1], 1),
+            'preconv2_bias':       torch.randn(16).cuda(),
+            'preconv3_weight':     self.conv_init(16, self.R_size_list[2], 1),
+            'preconv3_bias':       torch.randn(16).cuda(),
             # feedforward stride = 2 
-            'conv_weight':     self.conv_init(32, self.R_size_list[0], 1),
+            'conv_weight':     self.conv_init(32, 48, 1),
             'conv_bias':       torch.zeros(32).cuda(),
             # stride = 1
-            'conv1_weight':     self.conv_init(128, self.R_size_list[0], 1),
+            'conv1_weight':     self.conv_init(128, 48, 1),
             'conv1_bias':       torch.zeros(128).cuda(),
             # stride = 2
             'conv2_weight':     self.conv_init(128, 128, 3),
@@ -241,12 +172,14 @@ class Prednet(nn.Module):
 
 
 
-    def train(self,):
-        target_sequence = Variable(torch.zeros(net.T, net.batch_size, net.output_channels, net.height_ratio * 2 ** 7, net.width_ratio * 2 ** 7).cuda())
-        input_sequence,target_parameter = self.dset.getbatch()
+    def train(self, datapoints):
+        target_sequence = Variable(torch.zeros(self.T, self.batch_size, self.output_channels, self.height_ratio * 2 ** 7, self.width_ratio * 2 ** 7).cuda())
+        input_sequence, target_parameter = self.dset.getbatch()
         # target_sequence = Variable(torch.zeros(input_sequence.size()))
         print('\n---------- Train a '+str(self.number_of_layers)+' layer network ----------')
-        print('Input has size', input_sequence.size())
+        print('Input sequence has size', input_sequence.size())
+        print('Target sequence has size', target_sequence.size())
+        print('Target has size', target_parameter.size())
         print('Create a MSE criterion')
 
         print('Run for', self.max_epoch, 'Epoch')
@@ -254,30 +187,31 @@ class Prednet(nn.Module):
         for epoch in range(0, self.max_epoch):
             self.dset.shuffle()
             #totloss = 0
-            #print 30116/self.T/self.batch_size
-	    f = open("prednet_weights", "w")
-	    pickle.dump(self.params, f)
-	    print("Save weights!")
-	    f.close()
+        
+            self.save_weight()
 
-            for batch in range(0, 30116/self.T/self.batch_size-1):
-                input_sequence,target_parameter = self.dset.getbatch()
+            for batch in range(0, int(datapoints/self.T/self.batch_size)-1):
+                input_sequence, target_parameter = self.dset.getbatch()
                 self.optimizer.zero_grad() # zero the gradient buffers
                 loss = 0
                 loss1 = 0
                 loss2 = 0
-                error = [Variable(torch.zeros(self.batch_size,2*self.Ahat_size_list[l],self.height_ratio*2 **(self.exp-l),self.width_ratio*2 **(self.exp-l)).cuda())
-                    for l in range(0,self.number_of_layers)]
+
+                error = [Variable(torch.zeros(self.batch_size, 2*self.Ahat_size_list[l], self.height_ratio*2 **(self.exp-l), self.width_ratio*2 **(self.exp-l)).cuda())
+                    for l in range(0, self.number_of_layers)]
+                
                 state = [(
-                    Variable(torch.zeros(self.batch_size, self.R_size_list[l], self.height_ratio*2 **(self.exp-l),self.width_ratio*2 **(self.exp-l)).cuda()),
-                    Variable(torch.zeros(self.batch_size, self.R_size_list[l],self.height_ratio*2 **(self.exp-l), self.width_ratio*2 **(self.exp-l)).cuda())
-                    ) for l in range(0,self.number_of_layers)]
+                    Variable(torch.zeros(self.batch_size, self.R_size_list[l], self.height_ratio*2 **(self.exp-l), self.width_ratio*2 **(self.exp-l)).cuda()),
+                    Variable(torch.zeros(self.batch_size, self.R_size_list[l], self.height_ratio*2 **(self.exp-l), self.width_ratio*2 **(self.exp-l)).cuda())
+                    ) for l in range(0, self.number_of_layers)]
+                
                 for t in range(0, self.T):
                     # repackage
-                    for l in range(0,self.number_of_layers):
-                        state[l] = (Variable(state[l][0].data),Variable(state[l][1].data))
+                    for l in range(0, self.number_of_layers):
+                        state[l] = (Variable(state[l][0].data), Variable(state[l][1].data))
                         error[l] = Variable(error[l].data)
-                    error, state, predict_parameter = self.forward(input_sequence[t], error, state,)
+                    error, state, predict_parameter = self.forward(input_sequence[t], error, state)
+
                     # if t != 0:
                     #     ax = fig.add_subplot( 111 )
                     #     im = ax.imshow(np.zeros((128, 256*2, 3)))
@@ -290,11 +224,12 @@ class Prednet(nn.Module):
                     #     txt2 = ax.text(20,158,speed,style='italic',
                     #         bbox={'facecolor':'red', 'alpha':0.5, 'pad':10})
                     #     plt.savefig(str(t)+'.png')
+                    
                     if t != 0:
                         loss1 += self.loss_fn(error[0], target_sequence[t])
-                        loss2 += self.loss_fn(predict_parameter,target_parameter[t])
+                        loss2 += self.loss_fn(predict_parameter, target_parameter[t])
                 
-                print(' >>> Batch {:2d} image_loss: {:.3f} sensor_loss: {:.3f}'.format((batch + 1), loss1.data[0],loss2.data[0]))
+                print(' >>> Batch {:2d} image_loss: {:.3f} sensor_loss: {:.3f}'.format((batch + 1), loss1.data[0], loss2.data[0]))
                 #totloss = totloss + loss
                 loss = loss1+loss2
                 loss.backward()
@@ -304,11 +239,9 @@ class Prednet(nn.Module):
             # print(' > Epoch {:2d} loss: {:.3f}'.format((batch + 1), loss.data[0]))
             
             
-    def save_weight(self,):
-        f = open("prednet_weights", "w")
-        pickle.dump(self.params, f)
-        print("Save weights!")
-        f.close()
+    def save_weight(self):
+        torch.save(self.params, 'prednet_weights')
+        print("Saved weights!")
 
 if __name__ == '__main__':
     net = Prednet(
