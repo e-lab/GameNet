@@ -6,6 +6,7 @@
 
 
 # Python imports
+import os
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -22,13 +23,20 @@ from torchvision.utils import save_image
 # import matplotlib.image as mpimg
 
 # Local imports
-# from opts import get_args # Get all the input arguments
+from opts import get_args # Get all the input arguments
 from model_prednet import Prednet
 
+args = get_args()                   # Holds all the input argument
 
-#torch.manual_seed(0)
+if not os.path.exists(args.savedir):
+    os.makedirs(args.savedir)
 
-torch.cuda.set_device(1)
+args_log = open(args.savedir + '/args.log', 'w')
+args_log.write(str(args))
+args_log.close()
+
+#torch.manual_seed(args.seed)
+torch.cuda.set_device(args.devID)
 
 USE_CUDA = torch.cuda.is_available()
 if USE_CUDA ==0:
@@ -38,10 +46,6 @@ trans = torchvision.transforms.Compose([
                              ])
 dtype = torch.cuda.FloatTensor
 
-DATA_DIR = "/home/elab/Datasets/GTAV/2/"
-FILES_NUM = 30115
-BATCH_SIZE = 8
-SEQ_LEN = 10
 
 class Variable(Variable):
     def __init__(self, data, *args, **kwargs):
@@ -50,16 +54,16 @@ class Variable(Variable):
         super(Variable, self).__init__(data, *args, **kwargs)
 
 def transform(num):
-    filename = DATA_DIR+str(num)+ '.png'
+    filename = args.datadir+str(num)+ '.png'
     im = Image.open(filename)
     return trans(im)#.unsqueeze(0)
 
 class MyDataset(Dataset):
-    def __init__(self, len = SEQ_LEN, batch = BATCH_SIZE, max = FILES_NUM):
+    def __init__(self, len = args.seqLen, batch = args.batchSize, max = args.fileNum):
         self.length = len
         self.max = max
         self.batch = batch
-        self.fname = DATA_DIR+'dataset.txt'
+        self.fname = args.datadir+'dataset.txt'
         self.target = np.loadtxt(self.fname)
         self.target_mean = np.array([12.3,-0.0218,0.224,0.007117,0.268,-0.5638,-0.042])
         self.target_std = np.array([9.54,3.18,0.404,0.0817,0.3564,7.8035,0.8895])
@@ -125,7 +129,7 @@ def train(net):
     
         save_weight(net)
 
-        for batch in range(0, int(FILES_NUM/net.T/net.batch_size)-1):
+        for batch in range(0, int(args.fileNum/net.T/net.batch_size)-1):
             input_sequence, target_parameter = net.dset.getbatch()
             net.optimizer.zero_grad() # zero the gradient buffers
             loss = 0
@@ -174,9 +178,9 @@ if __name__ == '__main__':
     net = Prednet(2,1,3, batch = 8)
     net.optimizer = optim.SGD([
                 weights for dic in net.params for weights in dic.values()
-            ], lr=1e-2, momentum=0.9)
+            ], lr=args.lr, momentum=args.eta)
     net.dset = MyDataset(net.T, net.batch_size)
-    net.max_epoch = 30
+    net.max_epoch = args.epochs
     net = net.cuda()
     train(net)
     # model = torch.nn.DataParallel(net,device_ids=[0, 1, 2])
