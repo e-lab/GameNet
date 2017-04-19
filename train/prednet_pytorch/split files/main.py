@@ -65,9 +65,9 @@ class MyDataset(Dataset):
         self.batch = batch
         self.fname = args.datadir+'dataset.txt'
         self.target = np.loadtxt(self.fname)
-        self.target_mean = np.array([12.3,-0.0218,0.224,0.007117,0.268,-0.5638,-0.042])
-        self.target_std = np.array([9.54,3.18,0.404,0.0817,0.3564,7.8035,0.8895])
-        self.targetdata = torch.from_numpy((self.target[0:max,1:8]-self.target_mean)/self.target_std)
+        self.target_mean = self.target.mean(axis=0)
+        self.target_std = self.target.std(axis=0)
+        self.targetdata = torch.from_numpy((self.target[0:max,1:8]-self.target_mean[1:8])/self.target_std[1:8])
         #self.targetdata = self.targetdata[0:max,1:8]
         self.rand = np.arange(int(self.max/self.length))
         self.rand = self.rand*self.length+1
