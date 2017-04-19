@@ -26,6 +26,14 @@ from torchvision.utils import save_image
 from opts import get_args # Get all the input arguments
 from model_prednet import Prednet
 
+print('GTAV TRAINING TO PREDICT SENSOR DATA')
+# Color Palette
+CP_R = '\033[31m'
+CP_G = '\033[32m'
+CP_B = '\033[34m'
+CP_Y = '\033[33m'
+CP_C = '\033[0m'
+
 args = get_args()                   # Holds all the input argument
 
 if not os.path.exists(args.savedir):
@@ -35,12 +43,15 @@ args_log = open(args.savedir + '/args.log', 'w')
 args_log.write(str(args))
 args_log.close()
 
-#torch.manual_seed(args.seed)
-torch.cuda.set_device(args.devID)
+torch.manual_seed(args.seed)        # Set random seed manually
+if torch.cuda.is_available():
+    if not args.cuda:
+        print(CP_G + "WARNING: You have a CUDA device, so you should probably run with --cuda" + CP_C)
+    else:
+        torch.cuda.set_device(args.devID)
+        torch.cuda.manual_seed(args.seed)
+        print("\033[41mGPU({:}) is being used!!!{}".format(torch.cuda.current_device(), CP_C))
 
-USE_CUDA = torch.cuda.is_available()
-if USE_CUDA ==0:
-    print("WARNING:CUDA IS NOT AVAILABLE")
 trans = torchvision.transforms.Compose([
             torchvision.transforms.Scale(128), torchvision.transforms.ToTensor()
                              ])
@@ -49,8 +60,7 @@ dtype = torch.cuda.FloatTensor
 
 class Variable(Variable):
     def __init__(self, data, *args, **kwargs):
-        if USE_CUDA:
-            data.cuda()
+        data.cuda()
         super(Variable, self).__init__(data, *args, **kwargs)
 
 def transform(num):
@@ -59,16 +69,15 @@ def transform(num):
     return trans(im)#.unsqueeze(0)
 
 class MyDataset(Dataset):
-    def __init__(self, len = args.seqLen, batch = args.batchSize, max = args.fileNum):
+    def __init__(self, len = args.seqLen, max = args.fileNum):
         self.length = len
         self.max = max
-        self.batch = batch
+        self.batch = args.batchSize
         self.fname = args.datadir+'dataset.txt'
         self.target = np.loadtxt(self.fname)
         self.target_mean = self.target.mean(axis=0)
         self.target_std = self.target.std(axis=0)
-        self.targetdata = torch.from_numpy((self.target[0:max,1:8]-self.target_mean[1:8])/self.target_std[1:8])
-        #self.targetdata = self.targetdata[0:max,1:8]
+        self.targetdata = (self.target[0:self.max,1:8]-self.target_mean[1:8])/self.target_std[1:8]
         self.rand = np.arange(int(self.max/self.length))
         self.rand = self.rand*self.length+1
         self.counter = 0
@@ -89,9 +98,9 @@ class MyDataset(Dataset):
             img = img[0:3]
             traindata[index-1] = img
             index +=1
-        target = self.targetdata[int(idx):int(idx+self.length)]
+        target = torch.from_numpy(self.targetdata[int(idx):int(idx+self.length)])
         # save_image(traindata,'train.png')
-        return traindata,target
+        return traindata, target
 
     def getbatch(self):     
         inputd = torch.zeros(self.length,self.batch,3,128,256)
@@ -125,7 +134,6 @@ def train(net):
     for epoch in range(0, net.max_epoch):
         net.dset.shuffle()
         #totloss = 0
-        #print 30116/net.T/net.batch_size
     
         save_weight(net)
 
@@ -175,11 +183,11 @@ def train(net):
             
 
 if __name__ == '__main__':
-    net = Prednet(2,1,3, batch = args.batchSize)
+    net = Prednet(2,1,3, batch=args.batchSize, seq=args.seqLen)
     net.optimizer = optim.SGD([
                 weights for dic in net.params for weights in dic.values()
             ], lr=args.lr, momentum=args.eta)
-    net.dset = MyDataset(net.T, net.batch_size)
+    net.dset = MyDataset(net.T)
     net.max_epoch = args.epochs
     net = net.cuda()
     train(net)

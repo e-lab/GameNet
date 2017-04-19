@@ -12,7 +12,7 @@ def get_args():
     _('--savedir',  type=str,   default='/home/elab/Datasets/GTAV/2/', help='folder to save outputs')
     _('--model',    type=str,   default='models/model.py')
     _('--fileNum',  type=int,   default=30116)
-    _('--batchSize',type=int,   default=8)
+    _('--batchSize',type=int,   default=16)
     _('--seqLen',   type=int,   default=10)
     _('--dim',      type=int,   default=(256, 144), nargs=2, help='input image dimension as tuple (HxW)', metavar=('W', 'H'))
     _('--lr',       type=float, default=1e-2, help='learning rate')
@@ -20,5 +20,6 @@ def get_args():
     _('--seed',     type=int,   default=1, help='seed for random number generator')
     _('--epochs',   type=int,   default=30, help='# of epochs you want to run')
     _('--devID',    type=int,   default=0, help='GPU ID to be used')
+    _('--cuda',     type=bool,  default=True, help='use CUDA')
     args = parser.parse_args()
     return args

@@ -7,10 +7,10 @@ import pickle
 from torchvision.utils import save_image
 
 class Prednet(nn.Module):
-    def __init__(self, width_ratio=4, height_ratio=6, channels=3, batch=20):
+    def __init__(self, width_ratio=4, height_ratio=6, channels=3, batch=20, seq=10):
         super(Prednet, self).__init__()
         ## All the parameters below can be intialized in the __init__
-        self.T = 20  # sequence length
+        self.T = seq  # sequence length
         self.batch_size = batch
         self.number_of_layers = 3
         self.R_size_list = [16,32,64] # channels of prediction of lstm
@@ -104,10 +104,10 @@ class Prednet(nn.Module):
         try: 
             f = open("prednet_weights", "r")
             self.params = pickle.load(f)
-            print('Successfully load the weights!\n')
+            print('Loaded Prednet weights!')
             f.close()
         except Exception:
-            print('Fail to load the weights!\n')
+            print('Creating new Prednet model...')
             self.params = [None] * (self.number_of_layers+1)
             R_input_size_list = [x + 2*e for x,e in zip(self.R_size_list[1:] + [0],self.Ahat_size_list)]
 
