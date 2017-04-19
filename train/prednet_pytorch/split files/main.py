@@ -175,7 +175,7 @@ def train(net):
             
 
 if __name__ == '__main__':
-    net = Prednet(2,1,3, batch = 8)
+    net = Prednet(2,1,3, batch = args.batchSize)
     net.optimizer = optim.SGD([
                 weights for dic in net.params for weights in dic.values()
             ], lr=args.lr, momentum=args.eta)
