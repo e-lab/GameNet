@@ -59,7 +59,6 @@ dtype = torch.cuda.FloatTensor
 
 
 def loadntransform(num):
-    # print(num)
     filename = args.datadir+str(num)+ '.png'
     im = Image.open(filename)
     return trans(im)
@@ -85,7 +84,6 @@ class MyDataset(Dataset):
         inputd = torch.zeros(self.seqLen, args.channels, args.height, args.width)
         tmp = 0
         for i in range(index, self.seqLen+index):
-            # print('range', i)
             img = loadntransform(i+1)
             inputd[tmp] = img[0:3]
             tmp +=1
@@ -161,7 +159,7 @@ def train(datapoints, net):
     
     for epoch in range(0, net.max_epoch):
         net.train()
-        # pbar = trange(datapoints, desc='Epoch {:03}'.format(epoch))
+        pbar = trange(datapoints, desc='Epoch {:03}'.format(epoch))
 
         for batch, (input_sequence, target_sensors) in enumerate(train_loader):
             # print('input sequence', input_sequence.size())
@@ -179,12 +177,11 @@ def train(datapoints, net):
             loss = net.criterion(predictions, target_sensors[:,net.seqLen-1])
             loss.backward()
             net.optimizer.step()
-            print(' >>> Epoch {:d}, Batch {:2d}, sensor_loss: {:.3f}'.format( epoch+1, batch + 1, loss.data[0]))
-            if batch % 10 == 0:
-                logger_bw.write('\n{:.6f}'.format(loss.data[0]))
-                # pbar.set_postfix(str=' >>> Batch {:2d}, sensor_loss: {:.3f}'.format((batch + 1), loss.data[0]))
-                # pbar.referesh()
-                # pbar.update(10)
+            # print(' >>> Epoch {:d}, Batch {:2d}, sensor_loss: {:.3f}'.format( epoch+1, batch + 1, loss.data[0]))
+            logger_bw.write('\n{:.6f}'.format(loss.data[0]))
+            pbar.set_postfix(str=' >>> Epoch {:d}, Batch {:2d}, sensor_loss: {:.3f}'.format(epoch+1, batch + 1, loss.data[0]))
+            pbar.refresh()
+            pbar.update(10)
         
         net.eval()
         torch.save(net.state_dict(), args.savedir +'ECNet_weights')
