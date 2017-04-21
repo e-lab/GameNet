@@ -9,7 +9,7 @@ def get_args():
     parser = ArgumentParser(description='e-Lab Gesture Recognition Script')
     _ = parser.add_argument
     _('--datadir',  type=str,   default='/home/elab/Datasets/GTAV/2/', help='dataset location')
-    _('--savedir',  type=str,   default='/home/elab/Datasets/GTAV/2/', help='folder to save outputs')
+    _('--savedir',  type=str,   default='.', help='folder to save outputs')
     _('--model',    type=str,   default='models/model.py')
     _('--channels', type=int,   default=3)
     _('--height',   type=int,   default=128)
