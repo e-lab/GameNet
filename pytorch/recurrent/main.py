@@ -93,11 +93,11 @@ class MyDataset(Dataset):
 
 
 class ECnet(nn.Module):
-    def __init__(self):
+    def __init__(self, batchSize):
         super(ECnet, self).__init__()
         
         self.seqLen = args.seqLen
-        self.batch_size = args.batchSize
+        self.batch_size = batchSize
         self.features = [3,32,64,128,256,512]
         self.c1 = nn.Conv2d( self.features[0], self.features[1], 7, padding=0 )
         self.c2 = nn.Conv2d( self.features[1], self.features[2], 5, padding=0 )
@@ -147,18 +147,18 @@ def repackage_hidden(h):
 
 
 def train(datapoints, net):
+    net.train()
     h = net.init_hidden()
     print('\n---------- Train a ECnet neural network ----------')
     
     # Error logger
-    logger_bw = open(args.savedir + '/error_bw.log', 'w')
+    logger_bw = open(args.savedir + '/train_err.log', 'w')
     logger_bw.write('{:10}'.format('Train Error'))
     logger_bw.write('\n{:-<10}'.format(''))
 
     print('Running for', net.max_epoch, 'Epoch')
     
     for epoch in range(0, net.max_epoch):
-        net.train()
         # pbar = trange(net.max_epoch, bar_format='{l_bar}{bar}{postfix}', leave=True)
         # pbar.set_description('Epoch {:03}'.format(epoch))
 
@@ -184,26 +184,72 @@ def train(datapoints, net):
             # pbar.refresh()
             # pbar.update(1)
         
+        # save network in evaluation mode:
         net.eval()
-        torch.save(net.state_dict(), args.savedir +'/ECNet_weights.pt')
-        torch.save(net, args.savedir +'/ECNet_net.pt')   
+        torch.save(net.state_dict(), args.savedir + '/ECNet_weights.pt')
+        torch.save(net, args.savedir + '/ECNet_net.pt')   
 
     # pbar.close()
     print('Finished training!')
 
+
+def test(net):
+    net.eval()
+    # Error logger
+    logger_bw = open(args.savedir + '/test_err.log', 'w')
+    logger_bw.write('{:10}'.format('Test Error'))
+    logger_bw.write('\n{:-<10}'.format(''))
+
+    h = net.init_hidden()
+
+    for batch, (input_sequence, target_sensors) in enumerate(test_loader):
+        # print('input sequence', input_sequence.size())
+        # print('target sensors', target_sensors.size())
+        if args.cuda:  # Convert into CUDA tensors
+            input_sequence = input_sequence.cuda()
+            target_sensors = target_sensors.cuda()
+        input_sequence = Variable(input_sequence) # convert to Variable
+        target_sensors = Variable(target_sensors)
+        h = repackage_hidden(h)
+        predictions, h = net.forward(input_sequence, h)
+        # print('predictions size', predictions.size())
+        loss = net.criterion(predictions, target_sensors[:,net.seqLen-1])
+        print(' >>> Test Batch {:2d}, sensor_loss: {:.3f}'.format( batch+1, loss.data[0]))
+        logger_bw.write('\n{:.6f}'.format(loss.data[0]))
+        
+    print('Finished testing!')
+
+
+
 if __name__ == '__main__':
-    net = ECnet()
-    net = net.cuda()
-    net.criterion = nn.MSELoss()
-    net.optimizer = optim.Adam( params=net.parameters() ) #, lr=args.lr, momentum=args.eta)
-    args.fileNum = len(os.listdir(args.datadir))-1
+    args.fileNum = len(os.listdir(args.datadir))-1 # find number of files in dataset!
+    if not args.testing:    
+        net = ECnet(batchSize=args.batchSize)
+        net = net.cuda()
+        net.criterion = nn.MSELoss()
+        net.optimizer = optim.Adam( params=net.parameters() ) #, lr=args.lr, momentum=args.eta)
 
-    # create dataset and loaders:  
-    train_loader = DataLoader(dataset=MyDataset(seqLen=args.seqLen, files=args.fileNum), 
-                num_workers=args.threads, 
-                batch_size=args.batchSize, shuffle=True)
+        # create dataset and loaders:  
+        train_loader = DataLoader(dataset=MyDataset(seqLen=args.seqLen, files=args.fileNum), 
+                    num_workers=args.threads, 
+                    batch_size=args.batchSize, shuffle=True)
 
-    net.max_epoch = args.epochs
-    train( datapoints=args.fileNum, net=net)
-    # model = torch.nn.DataParallel(net,device_ids=[0, 1, 2])
-    # model.train()
+        net.max_epoch = args.epochs
+        train( datapoints=args.fileNum, net=net)
+        # model = torch.nn.DataParallel(net,device_ids=[0, 1, 2])
+        # model.train()
+    else:
+        # load pre-trained network:
+        net = torch.load(args.loaddir + '/ECNet_net.pt')
+        # net = ECnet(batchSize=1)
+        state = torch.load(args.loaddir + '/ECNet_weights.pt')
+        net.load_state_dict(state)
+        print('Loaded network:', net)
+        net.criterion = nn.MSELoss()
+
+        # create dataset and loaders:  
+        test_loader = DataLoader(dataset=MyDataset(seqLen=args.seqLen, files=args.fileNum), 
+                    num_workers=0, batch_size=args.batchSize, shuffle=False)
+
+        test(net=net)
+
