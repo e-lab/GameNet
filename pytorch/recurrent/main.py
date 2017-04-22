@@ -77,7 +77,7 @@ class MyDataset(Dataset):
 
     def __len__(self):
         l = int(self.length/self.seqLen/args.batchSize)*args.batchSize # we only take full batches to avoid crashes
-        print('Data size:', l, 'number of batches to run:', l/args.batchSize)
+        # print('Data size:', l, 'number of batches to run:', l/args.batchSize)
         return l
 
     def __getitem__(self, index):     
@@ -159,7 +159,8 @@ def train(datapoints, net):
     
     for epoch in range(0, net.max_epoch):
         net.train()
-        pbar = trange(datapoints, desc='Epoch {:03}'.format(epoch))
+        # pbar = trange(net.max_epoch, bar_format='{l_bar}{bar}{postfix}', leave=True)
+        # pbar.set_description('Epoch {:03}'.format(epoch))
 
         for batch, (input_sequence, target_sensors) in enumerate(train_loader):
             # print('input sequence', input_sequence.size())
@@ -177,17 +178,17 @@ def train(datapoints, net):
             loss = net.criterion(predictions, target_sensors[:,net.seqLen-1])
             loss.backward()
             net.optimizer.step()
-            # print(' >>> Epoch {:d}, Batch {:2d}, sensor_loss: {:.3f}'.format( epoch+1, batch + 1, loss.data[0]))
+            print(' >>> Epoch {:d}/{:d}, Batch {:2d}, sensor_loss: {:.3f}'.format( epoch+1, net.max_epoch, batch+1, loss.data[0]))
             logger_bw.write('\n{:.6f}'.format(loss.data[0]))
-            pbar.set_postfix(str=' >>> Epoch {:d}, Batch {:2d}, sensor_loss: {:.3f}'.format(epoch+1, batch + 1, loss.data[0]))
-            pbar.refresh()
-            pbar.update(10)
+            # pbar.set_postfix(Batch='{:2d}'.format(batch+1), Loss='{:.3f}'.format(loss.data[0]))
+            # pbar.refresh()
+            # pbar.update(1)
         
         net.eval()
-        torch.save(net.state_dict(), args.savedir +'ECNet_weights')
-        torch.save(net, args.savedir +'ECNet_net')   
+        torch.save(net.state_dict(), args.savedir +'/ECNet_weights.pt')
+        torch.save(net, args.savedir +'/ECNet_net.pt')   
 
-    pbar.close()
+    # pbar.close()
     print('Finished training!')
 
 if __name__ == '__main__':
