@@ -108,14 +108,11 @@ class ECnet(nn.Module):
         self.rnn1 = nn.RNN(self.features[3], self.features[3], args.rnnLayers)
         self.classifier1 = nn.Linear(self.features[3], args.sensors)
 
-
-    def init_hidden(self):
-        return Variable( torch.zeros(args.rnnLayers, self.batch_size, self.features[3]).cuda() )
-
     def forward(self, x, h):
         # print('input', x.size())
         pool = 4
-        otot = Variable( torch.zeros(self.seqLen, self.batch_size, self.features[3]).cuda() )
+        otot = Variable( torch.zeros(self.seqLen, self.batch_size, self.features[3]) )
+        if args.cuda: otot = otot.cuda()
         for t in range(0, self.seqLen):
             outp = F.relu(F.max_pool2d(self.c1(x[:,t]), pool, pool))
             # print('outp', outp.size())
@@ -137,6 +134,10 @@ class ECnet(nn.Module):
         # print('final out', y.size())
         return self.classifier1(y[self.seqLen-1]), h
 
+def init_hidden(net):
+    h = torch.zeros(args.rnnLayers, args.batchSize, net.features[3])
+    if args.cuda: h = h.cuda()
+    return Variable(h)
 
 def repackage_hidden(h):
     """Wraps hidden states in new Variables, to detach them from their history."""
@@ -148,7 +149,7 @@ def repackage_hidden(h):
 
 def train(datapoints, net):
     net.train()
-    h = net.init_hidden()
+    h = init_hidden(net)
     print('\n---------- Train a ECnet neural network ----------')
     
     # Error logger
@@ -200,16 +201,16 @@ def test(net):
     logger_bw.write('{:10}'.format('Test Error'))
     logger_bw.write('\n{:-<10}'.format(''))
 
-    h = net.init_hidden()
+    h = net.init_hidden().float()
 
     for batch, (input_sequence, target_sensors) in enumerate(test_loader):
         # print('input sequence', input_sequence.size())
         # print('target sensors', target_sensors.size())
-        if args.cuda:  # Convert into CUDA tensors
-            input_sequence = input_sequence.cuda()
-            target_sensors = target_sensors.cuda()
-        input_sequence = Variable(input_sequence) # convert to Variable
-        target_sensors = Variable(target_sensors)
+        # if args.cuda:  # Convert into CUDA tensors
+            # input_sequence = input_sequence.cuda()
+            # target_sensors = target_sensors.cuda()
+        input_sequence = Variable(input_sequence.float()) # convert to Variable
+        target_sensors = Variable(target_sensors.float())
         h = repackage_hidden(h)
         predictions, h = net.forward(input_sequence, h)
         # print('predictions size', predictions.size())
@@ -240,8 +241,8 @@ if __name__ == '__main__':
         # model.train()
     else:
         # load pre-trained network:
-        net = torch.load(args.loaddir + '/ECNet_net.pt')
-        # net = ECnet(batchSize=1)
+        # net = torch.load(args.loaddir + '/ECNet_net.pt')
+        net = ECnet(batchSize=1).float()
         state = torch.load(args.loaddir + '/ECNet_weights.pt')
         net.load_state_dict(state)
         print('Loaded network:', net)
@@ -249,7 +250,6 @@ if __name__ == '__main__':
 
         # create dataset and loaders:  
         test_loader = DataLoader(dataset=MyDataset(seqLen=args.seqLen, files=args.fileNum), 
-                    num_workers=0, batch_size=args.batchSize, shuffle=False)
+                    num_workers=0, shuffle=False, batch_size=1)#args.batchSize)
 
         test(net=net)
-
