@@ -24,6 +24,7 @@ from torchvision.utils import save_image
 # Local imports
 from opts import get_args # Get all the input arguments
 
+np.set_printoptions(precision=2)
 
 print('GTAV TRAINING TO PREDICT SENSOR DATA -- ECNet version')
 
@@ -217,6 +218,11 @@ def test(net):
         loss = net.criterion(predictions, target_sensors[:,net.seqLen-1])
         print(' >>> Test Batch {:2d}, sensor_loss: {:.3f}'.format( batch+1, loss.data[0]))
         logger_bw.write('\n{:.6f}'.format(loss.data[0]))
+
+        print('predictions, targets:')
+        print(predictions.cpu().data.numpy() ) 
+        print(target_sensors[:,net.seqLen-1].cpu().data.numpy() )        
+        input()
         
     print('Finished testing!')
 
