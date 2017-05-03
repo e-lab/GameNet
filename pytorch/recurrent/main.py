@@ -93,11 +93,10 @@ class MyDataset(Dataset):
 
 
 class ECnet(nn.Module):
-    def __init__(self, batchSize):
+    def __init__(self):
         super(ECnet, self).__init__()
         
         self.seqLen = args.seqLen
-        self.batch_size = batchSize
         self.features = [3,32,64,128,256,512]
         self.c1 = nn.Conv2d( self.features[0], self.features[1], 7, padding=0 )
         self.c2 = nn.Conv2d( self.features[1], self.features[2], 5, padding=0 )
@@ -111,8 +110,7 @@ class ECnet(nn.Module):
     def forward(self, x, h):
         # print('input', x.size())
         pool = 4
-        otot = Variable( torch.zeros(self.seqLen, self.batch_size, self.features[3]) )
-        if args.cuda: otot = otot.cuda()
+        otot = []
         for t in range(0, self.seqLen):
             outp = F.relu(F.max_pool2d(self.c1(x[:,t]), pool, pool))
             # print('outp', outp.size())
@@ -127,9 +125,11 @@ class ECnet(nn.Module):
             outp = self.avgpool(outp)
             # print('outp', outp.size())
             # print('otot[t]', otot[t].size())
-            otot[t] = outp
+            otot.append(outp.squeeze(2).squeeze(2)) # squeeze outer dims
 
-        # print(otot.size(), h.size())
+        otot = torch.stack(otot)
+        # print('otot', otot.size())
+        # print('h', h.size())
         y, h = self.rnn1(otot, h)
         # print('final out', y.size())
         return self.classifier1(y[self.seqLen-1]), h
@@ -201,16 +201,16 @@ def test(net):
     logger_bw.write('{:10}'.format('Test Error'))
     logger_bw.write('\n{:-<10}'.format(''))
 
-    h = net.init_hidden().float()
+    h = init_hidden(net)#.float()
 
     for batch, (input_sequence, target_sensors) in enumerate(test_loader):
         # print('input sequence', input_sequence.size())
         # print('target sensors', target_sensors.size())
-        # if args.cuda:  # Convert into CUDA tensors
-            # input_sequence = input_sequence.cuda()
-            # target_sensors = target_sensors.cuda()
-        input_sequence = Variable(input_sequence.float()) # convert to Variable
-        target_sensors = Variable(target_sensors.float())
+        if args.cuda:  # Convert into CUDA tensors
+            input_sequence = input_sequence.cuda()
+            target_sensors = target_sensors.cuda()
+        input_sequence = Variable(input_sequence) # convert to Variable
+        target_sensors = Variable(target_sensors)
         h = repackage_hidden(h)
         predictions, h = net.forward(input_sequence, h)
         # print('predictions size', predictions.size())
@@ -224,8 +224,9 @@ def test(net):
 
 if __name__ == '__main__':
     args.fileNum = len(os.listdir(args.datadir))-1 # find number of files in dataset!
-    if not args.testing:    
-        net = ECnet(batchSize=args.batchSize)
+    if not args.testing:
+        # training:
+        net = ECnet()
         net = net.cuda()
         net.criterion = nn.MSELoss()
         net.optimizer = optim.Adam( params=net.parameters() ) #, lr=args.lr, momentum=args.eta)
@@ -240,9 +241,11 @@ if __name__ == '__main__':
         # model = torch.nn.DataParallel(net,device_ids=[0, 1, 2])
         # model.train()
     else:
+        # testing:
         # load pre-trained network:
         # net = torch.load(args.loaddir + '/ECNet_net.pt')
-        net = ECnet(batchSize=1).float()
+        net = ECnet()
+        net = net.cuda()
         state = torch.load(args.loaddir + '/ECNet_weights.pt')
         net.load_state_dict(state)
         print('Loaded network:', net)
@@ -250,6 +253,6 @@ if __name__ == '__main__':
 
         # create dataset and loaders:  
         test_loader = DataLoader(dataset=MyDataset(seqLen=args.seqLen, files=args.fileNum), 
-                    num_workers=0, shuffle=False, batch_size=1)#args.batchSize)
+                    num_workers=0, shuffle=False, batch_size=args.batchSize)
 
         test(net=net)
