@@ -5,6 +5,11 @@ import math
 import torch.nn as nn
 import pickle
 from torchvision.utils import save_image
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import numpy as np
+import matplotlib.figure as fig
+from label import add_label
 
 class Prednet(nn.Module):
     def __init__(self, width_ratio=4, height_ratio=6, channels=3, batch=20, seq=10):
@@ -161,6 +166,26 @@ class Prednet(nn.Module):
         torch.save(self.params, 'prednet_weights')
         print("Saved weights!")
 
+    def run(self,input_sequence):
+	target_sequence = Variable(torch.zeros(self.T, self.batch_size, self.output_channels, self.height_ratio * 2 ** 7, self.width_ratio * 2 ** 7).cuda())
+        error = [Variable(torch.zeros(self.batch_size, 2*self.Ahat_size_list[l], self.height_ratio*2 **(self.exp-l), self.width_ratio*2 **(self.exp-l)).cuda())
+            for l in range(0, self.number_of_layers)]
+        
+        state = [(
+            Variable(torch.zeros(self.batch_size, self.R_size_list[l], self.height_ratio*2 **(self.exp-l), self.width_ratio*2 **(self.exp-l)).cuda()),
+            Variable(torch.zeros(self.batch_size, self.R_size_list[l], self.height_ratio*2 **(self.exp-l), self.width_ratio*2 **(self.exp-l)).cuda())
+            ) for l in range(0, self.number_of_layers)]
+        
+        for t in range(0, self.T):
+            # repackage
+            for l in range(0, self.number_of_layers):
+                state[l] = (Variable(state[l][0].data), Variable(state[l][1].data))
+                error[l] = Variable(error[l].data)
+
+            error, state, predict_parameter = self.forward(input_sequence[t], error, state)
+	print(' >>> Prediction:throttle: {:.3f} steering: {:.3f}'.format(predict_parameter[3],predict_parameter[4])
+	return torch.squeeze(predict_parameter)
+
 
     def train(self, datapoints):
         target_sequence = Variable(torch.zeros(self.T, self.batch_size, self.output_channels, self.height_ratio * 2 ** 7, self.width_ratio * 2 ** 7).cuda())
@@ -203,18 +228,8 @@ class Prednet(nn.Module):
 
                     error, state, predict_parameter = self.forward(input_sequence[t], error, state)
 
-                    # if t != 0:
-                    #     ax = fig.add_subplot( 111 )
-                    #     im = ax.imshow(np.zeros((128, 256*2, 3)))
-                    #     img=mpimg.imread(str(t)+'.png')
-                    #     im.set_data(img)
-                    #     param = "Steering:%f\nThrottle:%f" % (target_parameter[t][3],target_parameter[t][4])
-                    #     txt1 = ax.text(20,30,speed,style='italic',
-                    #         bbox={'facecolor':'red', 'alpha':0.5, 'pad':10})
-                    #     param_real = "Steering:%f\nThrottle:%f" % (predict_parameter[t][3],predict_parameter[t][4])
-                    #     txt2 = ax.text(20,158,speed,style='italic',
-                    #         bbox={'facecolor':'red', 'alpha':0.5, 'pad':10})
-                    #     plt.savefig(str(t)+'.png')
+                    if t != 0:
+			add_label(t,target_parameter[t],predict_parameter)
                     
                     if t != 0:
                         loss1 += self.loss_fn(error[0], target_sequence[t])

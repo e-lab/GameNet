@@ -6,7 +6,7 @@ def get_args():
     Parse input arguments for the training script
     :return: all the input arguments
     """
-    parser = ArgumentParser(description='e-Lab Gesture Recognition Script')
+    parser = ArgumentParser(description='GTA V automotive')
     _ = parser.add_argument
     _('--datadir',  type=str,   default='/home/elab/Datasets/GTAV/2/', help='dataset location')
     _('--savedir',  type=str,   default='.', help='folder to save outputs')
@@ -25,5 +25,6 @@ def get_args():
     _('--epochs',   type=int,   default=30, help='# of epochs you want to run')
     _('--devID',    type=int,   default=0, help='GPU ID to be used')
     _('--cuda',     type=bool,  default=True, help='use CUDA')
+    _('--port', type=int, default=8000, help='Port to listen to')
     args = parser.parse_args()
     return args
