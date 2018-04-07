@@ -21,7 +21,7 @@ import shutil
 import math
 from torchvision.utils import save_image
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 torch.backends.cudnn.benchmark=True
 random.seed(0)
 torch.manual_seed(0)
@@ -32,38 +32,49 @@ discount_factor = 0.99
 epochs = 200
 
 # Training regime
-episodes_per_epoch = 1000
+training_episodes_per_epoch = 100
+testing_episodes_per_epoch = 100
 
 # Other parameters
 seq_len=20
-frame_repeat = 5
+frame_repeat = 10
 resolution = (120, 160)
 episodes_to_watch = 10
 
-model_dir='./save'
+model_dir='./save_simple'
 if os.path.isdir(model_dir):
     shutil.rmtree(model_dir)
 os.makedirs(model_dir)
 model_loadfile = "./save/model_45.pt"
-model_savefile = os.path.join(model_dir,"model.pt")
+model_savefile = os.path.join(model_dir,"model.pth")
 save_model = True
 load_model = False
 
 # Configuration file path
-config_file_path = "../ViZDoom/scenarios/health_gathering_supreme.cfg"
+config_file_path = "../ViZDoom/scenarios/health_gathering.cfg"
 #config_file_path = "../ViZDoom/scenarios/my_way_home.cfg"
 #config_file_path = "../ViZDoom/scenarios/rocket_basic.cfg"
 #config_file_path = "../ViZDoom/scenarios/basic.cfg"
 #config_file_path = "../ViZDoom/scenarios/deadly_corridor.cfg"
 
 # Converts and down-samples the input image
-def preprocess(img):
+def preprocess(state):
+    img = state.screen_buffer
     img = np.moveaxis(img, [0,1,2], [2,0,1])
     img = Image.fromarray(img)
     img = Resize(75) (img)
     img = ToTensor() (img)
-    img = img.view(1,3,75,100)
-    img = img.cuda()
+    #img = img.unsqueeze(0)
+    #img = img.cuda()
+    depth = state.depth_buffer
+    depth = Image.fromarray(depth)
+    depth = Resize(75) (depth)
+    depth = ToTensor() (depth)
+    #depth = depth.unsqueeze(0)
+    img=torch.cat((img,depth),0)
+    img=img.unsqueeze(0)
+    img=img.cuda()
+    #print(depth)
     return img
 
 #criterion = nn.SmoothL1Loss()
@@ -78,6 +89,7 @@ def initialize_vizdoom(config_file_path):
     game.set_mode(Mode.PLAYER)
     game.set_screen_format(ScreenFormat.CRCGCB)
     game.set_screen_resolution(ScreenResolution.RES_640X480)
+    game.set_depth_buffer_enabled(True)
     game.init()
     print("Doom initialized.")
     return game
@@ -117,7 +129,7 @@ if __name__ == '__main__':
 
         print("Training...")
         model=model.train()
-        for learning_step in trange(episodes_per_epoch, leave=False):
+        for learning_step in trange(training_episodes_per_epoch, leave=False):
             t=0; loss=0.0; loss_value=0.0; loss_policy=0.0
             state=model.init_hidden()
             game.new_episode()
@@ -125,7 +137,7 @@ if __name__ == '__main__':
                 reward_list=[]; probs_list=[]; log_probs_list=[]; value_list=[]
                 loss=0.0
                 for t in range(seq_len):
-                    s1 = preprocess(game.get_state().screen_buffer)
+                    s1 = preprocess(game.get_state())#.screen_buffer)
                     (policy, value, state) = model(V(s1), state)
                     #print(value.size())
                     probs=F.softmax(policy,1)
@@ -148,7 +160,7 @@ if __name__ == '__main__':
                 if isterminal:
                     R=0.0
                 else:
-                    s2 = preprocess(game.get_state().screen_buffer)
+                    s2 = preprocess(game.get_state())#.screen_buffer)
                     (_, v, _) = model(V(s2), state)
                     R = v.item()
                 for i in reversed(range(len(reward_list))):
@@ -182,11 +194,11 @@ if __name__ == '__main__':
         test_episode = []
         test_scores = []
         model=model.eval()
-        for test_episode in trange(episodes_per_epoch, leave=False):
+        for test_episode in trange(testing_episodes_per_epoch, leave=False):
             state=model.init_hidden()
             game.new_episode()
             while not game.is_episode_finished():
-                s1 = preprocess(game.get_state().screen_buffer)
+                s1 = preprocess(game.get_state())#.screen_buffer)
                 (actual_q, _, state) = model(V(s1), state)
                 m, index = torch.max(actual_q, 1)
                 a = index.data[0]

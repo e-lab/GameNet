@@ -3,7 +3,6 @@ import numpy as np
 import random
 import time
 import itertools as it
-import skimage.color, skimage.transform
 import torch
 from PIL import Image
 from torchvision.transforms import ToTensor
@@ -52,7 +51,7 @@ for i in range(0,episodes):
         #curr_y = misc[1]
         misc = game.get_game_variable(GameVariable.HEALTH)
         #print(misc)
-        game.advance_action()
+        game.advance_action(5)
         #reward = game.make_action(random.choice(actions))
         #print("\treward:", reward)
         #time.sleep(0.02)

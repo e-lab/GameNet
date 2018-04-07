@@ -25,10 +25,6 @@ from PIL import Image
 from torchvision.transforms import ToTensor
 from torchvision.transforms import Scale
 import cv2
-from cortexnet import Cortexnet
-from cortexnet_basic_rl import Cortexnet_basic_rl
-from cortexnet_a2c import Cortexnet_a2c
-from attention2 import Attention2
 import shutil
 import math
 
@@ -71,9 +67,9 @@ config_file_path = "../ViZDoom/scenarios/rocket_basic.cfg"
 def preprocess(img):
     img = np.moveaxis(img, [0,1,2], [2,0,1])
     img = Image.fromarray(img)
-    img = Resize(120) (img)
+    img = Resize(75) (img)
     img = ToTensor() (img)
-    img = img.view(1,3,120,160)
+    img = img.view(1,3,100,120)
     img = img.cuda()
     return img
 
