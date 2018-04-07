@@ -37,7 +37,7 @@ testing_episodes_per_epoch = 100
 
 # Other parameters
 seq_len=20
-frame_repeat = 10
+frame_repeat = 5
 resolution = (120, 160)
 episodes_to_watch = 10
 
@@ -60,7 +60,7 @@ config_file_path = "../ViZDoom/scenarios/health_gathering.cfg"
 # Converts and down-samples the input image
 def preprocess(state):
     img = state.screen_buffer
-    img = np.moveaxis(img, [0,1,2], [2,0,1])
+    #img = np.moveaxis(img, [0,1,2], [2,0,1])
     img = Image.fromarray(img)
     img = Resize(75) (img)
     img = ToTensor() (img)
@@ -87,7 +87,8 @@ def initialize_vizdoom(config_file_path):
     game.load_config(config_file_path)
     game.set_window_visible(False)
     game.set_mode(Mode.PLAYER)
-    game.set_screen_format(ScreenFormat.CRCGCB)
+    #game.set_screen_format(ScreenFormat.CRCGCB)
+    game.set_screen_format(ScreenFormat.GRAY8)
     game.set_screen_resolution(ScreenResolution.RES_640X480)
     game.set_depth_buffer_enabled(True)
     game.init()

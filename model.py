@@ -15,7 +15,7 @@ class DoomNet(nn.Module):
     def __init__(self, num_classes):
         super(DoomNet,self).__init__()
         self.relu = nn.ReLU(inplace=True)
-        self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=4, padding=3)
+        self.conv1 = nn.Conv2d(2, 32, kernel_size=8, stride=4, padding=3)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=2)
         self.fc1 = nn.Linear(64*10*13,1024)
         self.dropout = nn.Dropout(p=0.5)
