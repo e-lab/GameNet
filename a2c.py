@@ -60,18 +60,15 @@ config_file_path = "../ViZDoom/scenarios/health_gathering.cfg"
 # Converts and down-samples the input image
 def preprocess(state):
     img = state.screen_buffer
-    #img = np.moveaxis(img, [0,1,2], [2,0,1])
+    img = np.moveaxis(img, [0,1,2], [2,0,1])
     img = Image.fromarray(img)
     img = Resize(75) (img)
     img = ToTensor() (img)
-    #img = img.unsqueeze(0)
-    #img = img.cuda()
-    depth = state.depth_buffer
-    depth = Image.fromarray(depth)
-    depth = Resize(75) (depth)
-    depth = ToTensor() (depth)
-    #depth = depth.unsqueeze(0)
-    img=torch.cat((img,depth),0)
+    #depth = state.depth_buffer
+    #depth = Image.fromarray(depth)
+    #depth = Resize(75) (depth)
+    #depth = ToTensor() (depth)
+    #img=torch.cat((img,depth),0)
     img=img.unsqueeze(0)
     img=img.cuda()
     #print(depth)
@@ -87,10 +84,10 @@ def initialize_vizdoom(config_file_path):
     game.load_config(config_file_path)
     game.set_window_visible(False)
     game.set_mode(Mode.PLAYER)
-    #game.set_screen_format(ScreenFormat.CRCGCB)
-    game.set_screen_format(ScreenFormat.GRAY8)
+    game.set_screen_format(ScreenFormat.CRCGCB)
+    #game.set_screen_format(ScreenFormat.GRAY8)
     game.set_screen_resolution(ScreenResolution.RES_640X480)
-    game.set_depth_buffer_enabled(True)
+    #game.set_depth_buffer_enabled(True)
     game.init()
     print("Doom initialized.")
     return game
@@ -138,7 +135,7 @@ if __name__ == '__main__':
                 reward_list=[]; probs_list=[]; log_probs_list=[]; value_list=[]
                 loss=0.0
                 for t in range(seq_len):
-                    s1 = preprocess(game.get_state())#.screen_buffer)
+                    s1 = preprocess(game.get_state())
                     (policy, value, state) = model(V(s1), state)
                     #print(value.size())
                     probs=F.softmax(policy,1)
@@ -161,16 +158,20 @@ if __name__ == '__main__':
                 if isterminal:
                     R=0.0
                 else:
-                    s2 = preprocess(game.get_state())#.screen_buffer)
+                    s2 = preprocess(game.get_state())
                     (_, v, _) = model(V(s2), state)
                     R = v.item()
+                value_list.append(torch.FloatTensor([R]))
+                gae=0.0
                 for i in reversed(range(len(reward_list))):
                     R=reward_list[i]+discount_factor*R
-                    advantage=R-value_list[i].item()
-                    loss_policy=-log_probs_list[i]*advantage
+                    #advantage=R-value_list[i].item()
+                    delta_t=reward_list[i]+discount_factor*value_list[i+1].item()-value_list[i].item()
+                    gae=discount_factor*gae+delta_t
+                    loss_policy=-log_probs_list[i]*gae #*advantage
                     loss_value=criterion(value_list[i],V(torch.cuda.FloatTensor([R])))
                     #print(R)
-                    #print(value_list[i].data[0])
+                    #print(value_list[i].item())
                     loss_entropy = (-1) * (-1) * (probs_list[i] * log_probs_list[i]).sum()
                     loss += loss_policy+loss_value+0.01*loss_entropy
                     loss_policy_total += loss_policy.item()
@@ -178,7 +179,7 @@ if __name__ == '__main__':
                     loss_entropy_total += loss_entropy.item()
                 optimizer.zero_grad()
                 loss.backward()
-                torch.nn.utils.clip_grad_norm(model.parameters(), 5.0)
+                torch.nn.utils.clip_grad_norm(model.parameters(), 50.0)
                 optimizer.step()
                 for j in range(len(state)):
                     state[j] = state[j].detach()
@@ -199,7 +200,7 @@ if __name__ == '__main__':
             state=model.init_hidden()
             game.new_episode()
             while not game.is_episode_finished():
-                s1 = preprocess(game.get_state())#.screen_buffer)
+                s1 = preprocess(game.get_state())
                 (actual_q, _, state) = model(V(s1), state)
                 m, index = torch.max(actual_q, 1)
                 a = index.data[0]
