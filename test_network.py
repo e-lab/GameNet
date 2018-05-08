@@ -23,10 +23,11 @@ from tqdm import trange
 import os
 from PIL import Image
 from torchvision.transforms import ToTensor
-from torchvision.transforms import Scale
+from torchvision.transforms import Resize
 import cv2
 import shutil
 import math
+from model import DoomNet
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 torch.backends.cudnn.benchmark=True
@@ -55,11 +56,11 @@ frame_repeat = 5
 resolution = (120, 160)
 episodes_to_watch = 10
 
-model_loadfile = "./save/model.pt"
+model_loadfile = "./save/model.pth"
 
 # Configuration file path
-#config_file_path = "../ViZDoom/scenarios/simpler_basic.cfg"
-config_file_path = "../ViZDoom/scenarios/rocket_basic.cfg"
+#config_file_path = "../ViZDoom/scenarios/my_way_home.cfg"
+config_file_path = "../ViZDoom/scenarios/health_gathering_supreme.cfg"
 #config_file_path = "../ViZDoom/scenarios/basic.cfg"
 #config_file_path = "../ViZDoom/scenarios/defend_the_center.cfg"
 
@@ -69,7 +70,8 @@ def preprocess(img):
     img = Image.fromarray(img)
     img = Resize(75) (img)
     img = ToTensor() (img)
-    img = img.view(1,3,100,120)
+    #img = img.view(1,3,100,120)
+    img = img.unsqueeze(0)
     img = img.cuda()
     return img
 
@@ -118,9 +120,9 @@ if __name__ == '__main__':
             #new_video[count_fr]=frame
             #count_fr+=1
 
-            (actual_q, _, state) = model(V(s1), state)
-            m, index = torch.max(actual_q.data, 1)
-            a = index[0]
+            (actual_q, _, state) = model(s1, state)
+            m, index = torch.max(actual_q, 1)
+            a = index.item()
 
             # Instead of make_action(a, frame_repeat) in order to make the animation smooth
             game.set_action(actions[a])
@@ -129,6 +131,7 @@ if __name__ == '__main__':
                 #    s1, frame = preprocess(game.get_state().screen_buffer)
                     #out.write(frame)
                 game.advance_action()
+                sleep(0.02)
 
         # Sleep between episodes
         sleep(1.0)

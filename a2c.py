@@ -21,7 +21,7 @@ import shutil
 import math
 from torchvision.utils import save_image
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 torch.backends.cudnn.benchmark=True
 random.seed(0)
 torch.manual_seed(0)
@@ -29,7 +29,7 @@ torch.cuda.manual_seed_all(0)
 
 learning_rate = 0.00001
 discount_factor = 0.99
-epochs = 200
+epochs = 1000
 
 # Training regime
 training_episodes_per_epoch = 100
@@ -41,7 +41,7 @@ frame_repeat = 5
 resolution = (120, 160)
 episodes_to_watch = 10
 
-model_dir='./save_simple'
+model_dir='./save'
 if os.path.isdir(model_dir):
     shutil.rmtree(model_dir)
 os.makedirs(model_dir)
@@ -51,7 +51,7 @@ save_model = True
 load_model = False
 
 # Configuration file path
-config_file_path = "../ViZDoom/scenarios/health_gathering.cfg"
+config_file_path = "../ViZDoom/scenarios/health_gathering_supreme.cfg"
 #config_file_path = "../ViZDoom/scenarios/my_way_home.cfg"
 #config_file_path = "../ViZDoom/scenarios/rocket_basic.cfg"
 #config_file_path = "../ViZDoom/scenarios/basic.cfg"
@@ -179,7 +179,7 @@ if __name__ == '__main__':
                     loss_entropy_total += loss_entropy.item()
                 optimizer.zero_grad()
                 loss.backward()
-                torch.nn.utils.clip_grad_norm(model.parameters(), 50.0)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 50.0)
                 optimizer.step()
                 for j in range(len(state)):
                     state[j] = state[j].detach()
