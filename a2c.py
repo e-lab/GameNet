@@ -20,6 +20,12 @@ from model import DoomNet
 import shutil
 import math
 from torchvision.utils import save_image
+from argparse import ArgumentParser
+
+parser = ArgumentParser()
+_ = parser.add_argument
+_('--save_dir', type = str, default = './save', help = 'Save directory')
+args = parser.parse_args()
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 torch.backends.cudnn.benchmark=True
@@ -27,7 +33,7 @@ random.seed(0)
 torch.manual_seed(0)
 torch.cuda.manual_seed_all(0)
 
-learning_rate = 0.00001
+learning_rate = 0.0001
 discount_factor = 0.99
 epochs = 1000
 
@@ -41,12 +47,12 @@ frame_repeat = 5
 resolution = (120, 160)
 episodes_to_watch = 10
 
-model_dir='./save'
+model_dir = args.save_dir
 if os.path.isdir(model_dir):
     shutil.rmtree(model_dir)
 os.makedirs(model_dir)
 model_loadfile = "./save/model_45.pt"
-model_savefile = os.path.join(model_dir,"model.pth")
+model_savefile = os.path.join(model_dir, "model.pth")
 save_model = True
 load_model = False
 
@@ -95,7 +101,7 @@ def initialize_vizdoom(config_file_path):
 
 if __name__ == '__main__':
 
-    of = open(os.path.join(model_dir,'test.txt'), 'w')
+    of = open(os.path.join(model_dir, 'test.txt'), 'w')
 
     # Create Doom instance
     game = initialize_vizdoom(config_file_path)
@@ -117,6 +123,7 @@ if __name__ == '__main__':
 
     print("Starting the training!")
     time_start = time()
+    training_steps = 0
     for epoch in range(epochs):
         print("\nEpoch %d\n-------" % (epoch + 1))
         train_episodes_finished = 0
@@ -189,6 +196,7 @@ if __name__ == '__main__':
             train_scores.append(score)
 
         train_scores = np.array(train_scores)
+        training_steps += steps_total
         print("Results: mean: %.2f std: %.2f," % (train_scores.mean(), train_scores.std()), "min: %.2f," % train_scores.min(), "max: %.2f," % train_scores.max())
         print('Loss_policy: %f, loss_value: %f, loss_entropy: %f' % (loss_policy_total/steps_total, loss_value_total/steps_total, loss_entropy_total/steps_total))
 
@@ -214,8 +222,8 @@ if __name__ == '__main__':
         print("Saving the network weigths to:", model_savefile)
         torch.save(model.state_dict(), model_savefile)
 
-        print("Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0))
-        of.write('%d,%f,%f\n' % (epoch + 1, (time() - time_start) / 60.0, test_scores.mean())); of.flush()
+        print("Total training steps: {:d}, Total elapsed time: {:.2f} minutes".format(training_steps, (time() - time_start) / 60.0))
+        of.write('{:d},{:d},{:f},{:f}\n'.format(epoch + 1, training_steps, (time() - time_start) / 60.0, test_scores.mean())); of.flush()
 
     game.close()
     print("======================================")
