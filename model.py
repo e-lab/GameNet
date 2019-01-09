@@ -86,7 +86,7 @@ class ICM(nn.Module):
         x = self.relu(self.inverse_fc1(x))
         a_out = self.inverse_fc2(x)
 
-        x = torch.cat((emb1.detach(), a_in), 1)
+        x = torch.cat((emb1, a_in), 1)
         x = self.relu(self.forward_fc1(x))
         emb2_out = self.forward_fc2(x)
 
