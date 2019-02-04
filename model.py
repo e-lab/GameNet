@@ -16,9 +16,13 @@ class DoomNet(nn.Module):
         super(DoomNet,self).__init__()
         self.relu = nn.ELU(inplace=True)
         self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=2, padding=1)
+        self.bn1 = nn.BatchNorm2d(32)
         self.conv2 = nn.Conv2d(32, 32, kernel_size=3, stride=2, padding=1)
+        self.bn2 = nn.BatchNorm2d(32)
         self.conv3 = nn.Conv2d(32, 32, kernel_size=3, stride = 2, padding = 1)
+        self.bn3 = nn.BatchNorm2d(32)
         self.conv4 = nn.Conv2d(32, 32, kernel_size = 3, stride = 2, padding = 1)
+        self.bn4 = nn.BatchNorm2d(32)
         #self.fc1 = nn.Linear(32 * 3 * 3, 1024)
         #self.dropout = nn.Dropout(p=0.5)
         self.lstm1 = nn.LSTMCell(32 * 3 * 3, 256)
@@ -29,12 +33,12 @@ class DoomNet(nn.Module):
         hx1i=state[0]
         cx1i=state[1]
 
-        x = self.relu(self.conv1(x))
-        x = self.relu(self.conv2(x))
-        x = self.relu(self.conv3(x))
-        x = self.relu(self.conv4(x))
+        x = self.relu(self.bn1(self.conv1(x)))
+        x = self.relu(self.bn2(self.conv2(x)))
+        x = self.relu(self.bn3(self.conv3(x)))
+        x = self.relu(self.bn4(self.conv4(x)))
    
-        x=x.view(1, 32 * 3 * 3)
+        x=x.view(x.size(0), 32 * 3 * 3)
         #x=self.dropout(self.relu(self.fc1(x)))
         (hx1o,cx1o)=self.lstm1(x,(hx1i,cx1i))
         #hx1o=self.dropout(hx1o); cx1o=self.dropout(cx1o)
@@ -45,11 +49,12 @@ class DoomNet(nn.Module):
 
         return (y, v, state)
 
-    def init_hidden(self):
+    def init_hidden(self, batch_size):
         state=[]
-        state.append(torch.zeros(1, 256).cuda())
-        state.append(torch.zeros(1, 256).cuda())
+        state.append(torch.zeros(batch_size, 256).cuda())
+        state.append(torch.zeros(batch_size, 256).cuda())
         return state
+
 
 class ICM(nn.Module):
     def __init__(self, num_classes):
