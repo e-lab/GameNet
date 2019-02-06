@@ -6,19 +6,29 @@ This project aims at developing a neural network trained using reinforcement lea
 
 Implementation
 
+An image of the ICM network architecture is shown below in Figure 1.
 
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%20Network%20Architecture.PNG)
 
 
 Testing Methodology and Results
 
 There are 5 scenarios that the algorithm is assessed on. The scenarios are divided in two subgroups: Custom scenarios and “My Way Home” scenarios. Custom scenarios are designed by the team specifically for this task, while “My Way Home” scenarios are available from the ViZDoom framework. The Custom scenarios have the same wall textures across each room, whereas the “My Way Home” scenarios have different wall textures in each room. 
+
 The Custom scenarios are as follow:
+
 •	1-Room Scenario: Agent and target are spawned randomly in the same room in a single-room environment
+
 •	2-Room Scenario: Agent and target are spawned randomly in two different rooms in a two-room environment connected with corridors
+
 •	3-Room Scenario: Agent and target are spawned randomly in two different rooms in a three-room environment connected with corridors
+
 The “My Way Home” scenarios are as follow:
+
 •	Dense: Agent is spawned randomly in one of 17 spawn locations and must navigate the scenario to reach the target
+
 •	Sparse: More complicated variant of My Way Home Dense, where the agent is spawned at one location far away from the objective
+
 
 
 Conclusions
