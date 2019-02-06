@@ -9,7 +9,7 @@ Implementation
 An image of the ICM network architecture is shown below in Figure 1.
 
 ![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%20Network%20Architecture.PNG)
-
+Figure 1. Neural Network Architecture for Intrinsic Curiosity
 
 Testing Methodology and Results
 
@@ -29,15 +29,7 @@ The “My Way Home” scenarios are as follow:
 
 •	Sparse: More complicated variant of My Way Home Dense, where the agent is spawned at one location far away from the objective
 
-Video Gameplay from My Way Home Sparse, Varied Textures:
-
-[![Watch the video](https://img.youtube.com/vi/b1hOzzZO2ag/hqdefault.jpg)](
-https://youtu.be/b1hOzzZO2ag)
-
-Video Gameplay from My Way Home Dense, Uniform Textures:
-
-[![Watch the video](https://img.youtube.com/vi/FO8I7g8z_Jw/hqdefault.jpg)](
-https://youtu.be/FO8I7g8z_Jw)
+Shown below are videos of an agent, controlled by a neural network, exploring various mazes. In the first two videos, the agent is exploring the 2-Room Scenario. However, in the first case, the textures of the walls differ and present different features to provide a higher intrinsic reward to the agent. In the second, the textures of the walls are all the same and bare no differences visually or in terms of features to generate a significant intrinsic reward value.
 
 Video Gameplay from 2 Room Scenario, Varied Textures:
 
@@ -48,6 +40,18 @@ Video Gameplay from 2 Room Scenario, Uniform Textures:
 
 [![Watch the video](https://img.youtube.com/vi/gdGoK9cx1R4/hqdefault.jpg)](
 https://youtu.be/gdGoK9cx1R4)
+
+In the next two videos, the agent is attempting to solve the My Way Home Dense and My Way Home Sparse scenarios. In the My Way Home Sparse environment, the textures of the walls differ from room to room to better incentivize the agent to explore the environment. As demonstrated in the results plots, the agent fails to reach the external reward target in the My Way Home Sparse scenario with entirely uniform wall textures between the rooms. The second video is thus of the My Way Home Dense scenario with uniform wall textures throughout the entire environment. The agent is able to successfully navigate and find the external reward in this case. 
+
+Video Gameplay from My Way Home Sparse, Varied Textures:
+
+[![Watch the video](https://img.youtube.com/vi/b1hOzzZO2ag/hqdefault.jpg)](
+https://youtu.be/b1hOzzZO2ag)
+
+Video Gameplay from My Way Home Dense, Uniform Textures:
+
+[![Watch the video](https://img.youtube.com/vi/FO8I7g8z_Jw/hqdefault.jpg)](
+https://youtu.be/FO8I7g8z_Jw)
 
 
 Conclusions
