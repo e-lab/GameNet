@@ -29,9 +29,25 @@ The “My Way Home” scenarios are as follow:
 
 •	Sparse: More complicated variant of My Way Home Dense, where the agent is spawned at one location far away from the objective
 
-Video Gameplay from My Way Home Dense, Uniform:
+Video Gameplay from My Way Home Sparse, Varied Textures:
 
-[![Watch the video](https://img.youtube.com/vi/b1hOzzZO2ag/maxresdefault.jpg)](
+[![Watch the video](https://img.youtube.com/vi/b1hOzzZO2ag/hqdefault.jpg)](
 https://youtu.be/b1hOzzZO2ag)
+
+Video Gameplay from My Way Home Dense, Uniform Textures:
+
+[![Watch the video](https://img.youtube.com/vi/FO8I7g8z_Jw/hqdefault.jpg)](
+https://youtu.be/FO8I7g8z_Jw)
+
+Video Gameplay from 2 Room Scenario, Varied Textures:
+
+[![Watch the video](https://img.youtube.com/vi/ZM_DA8amomU/hqdefault.jpg)](
+https://youtu.be/ZM_DA8amomU)
+
+Video Gameplay from 2 Room Scenario, Uniform Textures:
+
+[![Watch the video](https://img.youtube.com/vi/gdGoK9cx1R4/hqdefault.jpg)](
+https://youtu.be/gdGoK9cx1R4)
+
 
 Conclusions
