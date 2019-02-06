@@ -31,7 +31,7 @@ The “My Way Home” scenarios are as follow:
 
 Video Gameplay from My Way Home Dense, Uniform:
 
-<video src="videos/MyWayHomeDenseUniform.mp4" width="320" height="200" controls preload></video>
-
+[![Watch the video](https://img.youtube.com/vi/b1hOzzZO2ag/maxresdefault.jpg)](
+https://youtu.be/b1hOzzZO2ag)
 
 Conclusions
