@@ -29,6 +29,9 @@ The “My Way Home” scenarios are as follow:
 
 •	Sparse: More complicated variant of My Way Home Dense, where the agent is spawned at one location far away from the objective
 
+Video Gameplay from My Way Home Dense, Uniform:
+
+<video src="videos/MyWayHomeDenseUniform.mp4" width="320" height="200" controls preload></video>
 
 
 Conclusions
