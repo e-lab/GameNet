@@ -24,12 +24,19 @@ class Worker:
         self.frame_repeat = frame_repeat
         self.engine = self.initialize_vizdoom()
         self.frame = self.preprocess(self.engine.get_state())
-        self.frame_prev = torch.zeros(3, self.resolution[0], self.resolution[1])
         self.actions = [[0, 0, 0], [1, 0, 0], [0, 0, 1], [0, 1, 0]]
         self.reward = 0.0
-        self.finished = 0
+        self.initial = 0
+        self.finished = 1
         self.scores = []
 
+    def reset(self):
+        self.engine.new_episode()
+        self.frame = self.preprocess(self.engine.get_state())
+        self.initial = 1
+        self.finished = 0
+        self.scores = []
+        
     def initialize_vizdoom(self):        
         game = DoomGame()
         game.load_config(self.config_file_path)
@@ -53,6 +60,7 @@ class Worker:
         img = img
         return img
 
+    '''
     def step(self, action):
         if self.finished:
             self.scores.append(self.engine.get_total_reward())
@@ -63,7 +71,7 @@ class Worker:
         self.frame_prev = self.frame
         if not self.finished:
             self.frame = self.preprocess(self.engine.get_state())
-        
+    '''     
 
     def shutdown(self):
         self.engine.close()

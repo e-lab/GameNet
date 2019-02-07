@@ -19,11 +19,14 @@ from random import sample, randint
 from time import time, sleep
 from tqdm import trange
 from model import DoomNet
+from model import ICM
 from worker import Worker
 from multiprocessing.pool import ThreadPool
 
 parser = ArgumentParser()
 _ = parser.add_argument
+_('--icm', action='store_true', help = 'Run with curiosity')
+_('--scenario', type = str, default = './scenarios/my_way_home.cfg', help = 'set path to the scenario')
 _('--save_dir', type = str, default = './save', help = 'Save directory')
 args = parser.parse_args()
 
@@ -35,51 +38,23 @@ torch.manual_seed(0)
 
 learning_rate = 0.0001
 discount_factor = 0.99
-epochs = 300
+epochs = 100
 training_steps_per_epoch = 10000
-training_episodes_per_epoch = 160
-testing_episodes_per_epoch = 20
 seq_len = 20
 sequences_per_epoch = training_steps_per_epoch // seq_len
 frame_repeat = 4
 resolution = [42, 42]
 reward_scaling = 1.0
+reward_intrinsic_scaling = 0.01
 value_loss_scaling = 0.5
 entropy_loss_scaling = 0.01
 max_grad = 40.0
 num_workers = 20
-#config_file_path = "../ViZDoom/scenarios/health_gathering_supreme.cfg"
-#config_file_path = "../ViZDoom/scenarios/my_way_home.cfg"
-config_file_path = "./scenarios/my_way_home.cfg"
-#config_file_path = "../ViZDoom/scenarios/rocket_basic.cfg"
-#config_file_path = "../ViZDoom/scenarios/basic.cfg"
-#config_file_path = "../ViZDoom/scenarios/deadly_corridor.cfg"
+config_file_path = args.scenario
 load_model = False
 model_dir = args.save_dir
 model_loadfile = "./save/model.pth"
 model_savefile = os.path.join(model_dir, "model.pth")
-
-def initialize_vizdoom():        
-    game = DoomGame()
-    game.load_config(config_file_path)
-    game.set_window_visible(False)
-    game.set_mode(Mode.PLAYER)
-    game.set_screen_format(ScreenFormat.CRCGCB)
-    #game.set_screen_format(ScreenFormat.GRAY8)
-    game.set_screen_resolution(ScreenResolution.RES_160X120)
-    game.set_depth_buffer_enabled(False)
-    game.init()
-    return game
-
-def preprocess(state):
-    img = state.screen_buffer
-    img = np.moveaxis(img, [0,1,2], [2,0,1])
-    img = Image.fromarray(img)
-    img = Resize(resolution) (img)
-    img = ToTensor() (img)
-    img = img.unsqueeze(0)
-    img = img.cuda()
-    return img
 
 def prep_frames_batch(workers, resolution):
     output = torch.FloatTensor(len(workers), 3, resolution[0], resolution[1])
@@ -94,22 +69,23 @@ def set_action(workers, actions):
     return workers
 
 def step(worker):
-    #if worker.finished:
-    #    worker.scores.append(worker.engine.get_total_reward())
-    #    worker.engine.new_episode()
+    if worker.initial:
+        worker.initial = 0
+    if worker.finished:
+        worker.initial = 1
     worker.reward = worker.engine.make_action(worker.actions[worker.action], worker.frame_repeat)
-    #worker.reward = worker.engine.get_last_reward()
     worker.finished = worker.engine.is_episode_finished()
-    worker.frame_prev = worker.frame
     if worker.finished:
         worker.scores.append(worker.engine.get_total_reward())
         worker.engine.new_episode()
     worker.frame = worker.preprocess(worker.engine.get_state())
 
+'''
 def perform_action(workers, actions):
     for i in range(len(workers)):
         workers[i].step(actions[i].item())
     return workers
+'''
 
 def prep_rewards_batch(workers):
     output = torch.FloatTensor(len(workers))
@@ -125,10 +101,6 @@ def prep_finished(workers, hidden):
         if workers[i].finished:
             output[i] = 0
             mask[i] = torch.zeros(256)
-            #hidden[0] = hidden[0].detach()
-            #hidden[1] = hidden[1].detach()
-            #hidden[0] = hidden[0] * mask
-            #hidden[1] = hidden[1] * mask
         else:
             output[i] = 1
     output = output.cuda()
@@ -137,6 +109,12 @@ def prep_finished(workers, hidden):
     hidden[1] = hidden[1] * mask
     return output, hidden
 
+def prep_initial(workers, a_out, a_label, emb_out, emb):
+    for i in range(len(workers)):
+        if workers[i].initial:
+            a_label[i] = 4
+            emb_out[i] = emb[i].clone()
+            
 def get_scores(workers):
     scores = []
     for i in range(len(workers)):
@@ -160,7 +138,7 @@ if __name__ == '__main__':
     workers = []
     workers_test = []
     for i in range(num_workers):
-        workers.append(Worker(config_file_path, resolution, frame_repeat))  
+        workers.append(Worker(config_file_path, resolution, frame_repeat))
         workers_test.append(Worker(config_file_path, resolution, frame_repeat))  
 
     #n = game.get_available_buttons_size()
@@ -174,12 +152,17 @@ if __name__ == '__main__':
         model.load_state_dict(my_sd)
     else:
         model = DoomNet(len(actions))
-    model=model.cuda()
+    model_icm = ICM(len(actions))
+    model = model.cuda()
+    model_icm = model_icm.cuda()
     #criterion = nn.SmoothL1Loss()
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    nll = nn.CrossEntropyLoss(ignore_index = len(actions))
+    optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
+    optimizer_icm = torch.optim.Adam(model_icm.parameters(), lr = learning_rate)
 
     whole_batch = torch.arange(num_workers)
+    ones = torch.ones(num_workers)
     pool = ThreadPool()
 
     print("Starting the training!")
@@ -188,12 +171,17 @@ if __name__ == '__main__':
     backward_time = 0.0
     test_time = 0.0
     hidden = model.init_hidden(num_workers)
+    inp1 = torch.randn(num_workers, 3, resolution[0], resolution[1]).cuda()
+    a_icm = torch.zeros(num_workers).long().cuda()
+
     for epoch in range(epochs):
         print("\nEpoch %d\n-------" % (epoch))
         loss_value_total = 0.0
         loss_policy_total = 0.0
         loss_entropy_total = 0.0    
-        loss_total = 0.0
+        loss_inverse_total = 0.0
+        loss_forward_total = 0.0
+        reward_intrinsic_total = 0.0    
 
         print("Training...")
         model.train()
@@ -222,8 +210,33 @@ if __name__ == '__main__':
                 reward_list.append(reward)           
                 unfinished, hidden = prep_finished(workers, hidden)
                 unfinished_list.append(unfinished)
+
+                if args.icm:
+                    inp2 = inp
+                    a_out, emb_out, emb = model_icm(inp1, inp2, a_icm)       
+                    a_label = a_icm.clone() 
+                    prep_initial(workers, a_out, a_label, emb_out, emb)
+                    reward_intrinsic = (emb_out.detach() - emb).pow(2).mean(1) / reward_intrinsic_scaling
+                    reward += reward_intrinsic
+                    ones = torch.ones(num_workers).cuda()
+                    reward = torch.min(reward, ones)
+                    reward_list[t] = reward
+                    #print(reward_intrinsic)                
+                    loss_inverse = nll(a_out, a_label)
+                    loss_forward = criterion(emb_out, emb)
+                    loss_icm = 0.8 * loss_inverse + 0.2 * loss_forward 
+                    loss_inverse_total += loss_inverse.item()
+                    loss_forward_total += loss_forward.item()
+                    reward_intrinsic_total += reward_intrinsic.mean().item()
+                    inp1 = inp2        
+                    a_icm = a             
+                    optimizer_icm.zero_grad()
+                    loss_icm.backward()
+                    torch.nn.utils.clip_grad_norm_(model_icm.parameters(), max_grad)
+                    optimizer_icm.step()
+
             inp = prep_frames_batch(workers, resolution)
-            (policy, value, hidden) = model(inp, hidden)
+            (_, value, _) = model(inp, hidden)
             value_list.append(value.squeeze(1))
             forward_time += (time() - forward_start_time)
 
@@ -237,9 +250,7 @@ if __name__ == '__main__':
                 gae = gae * unfinished_list[t]
                 gae = discount_factor * gae + delta_t             
                 loss_policy = (-log_probs_list[t] * gae.detach()).mean()
-                #print(value_list[t].size())
-                #print(R.size())
-                loss_value = 0.5 * criterion(value_list[t].unsqueeze(1), R.unsqueeze(1))
+                loss_value = criterion(value_list[t].unsqueeze(1), R.unsqueeze(1))
                 loss_entropy = (-entropy_list[t]).mean()
                 loss += loss_policy + value_loss_scaling * loss_value + entropy_loss_scaling * loss_entropy
                 loss_policy_total += loss_policy.item()
@@ -255,11 +266,15 @@ if __name__ == '__main__':
             backward_time += (time() - backward_start_time)
     
         workers, train_scores = get_scores(workers)
+        total_steps = (epoch + 1) * training_steps_per_epoch * num_workers
         print("Results: mean: {:.2f}, std: {:.2f}, min: {:.2f}, max: {:.2f}, count: {:d}".format(train_scores.mean(), train_scores.std(), train_scores.min(), train_scores.max(), train_scores.shape[0]))
         print('Loss_policy: {:f}, loss_value: {:f}, loss_entropy: {:f}'.format(loss_policy_total/training_steps_per_epoch, loss_value_total/training_steps_per_epoch, loss_entropy_total/training_steps_per_epoch))
+        print('Reward intrinsic: {:f}, Loss_inverse: {:f}, loss_forward: {:f}'.format(reward_intrinsic_total/training_steps_per_epoch, loss_inverse_total/training_steps_per_epoch, loss_forward_total/training_steps_per_epoch))
 
         print("\nTesting...")
         test_start_time = time()
+        for worker in workers_test:
+            worker.reset()
         with torch.no_grad():
             model.eval()
             hidden_test = model.init_hidden(num_workers)
@@ -268,7 +283,6 @@ if __name__ == '__main__':
                     inp = prep_frames_batch(workers_test, resolution)
                     (policy, value, hidden_test) = model(inp, hidden_test)
                     _, a = torch.max(policy, 1)
-                    #a = index.item()
                     workers_test = set_action(workers_test, a)
                     pool.map(step, workers_test)           
                     unfinished, hidden_test = prep_finished(workers_test, hidden_test)
@@ -278,7 +292,6 @@ if __name__ == '__main__':
 
         #print("Saving the network weigths to:", model_savefile)
         torch.save(model.state_dict(), model_savefile)
-        total_steps = (epoch + 1) * training_steps_per_epoch
         total_time = time() - start_time
         print("Total training steps: {:d}, Total elapsed time: {:.2f} minutes, Time per step: {:.2f} ms".format(total_steps, total_time / 60.0, (total_time / total_steps) * 1000.0))
         print("Forward time: {:.2f} ms, Backward time: {:.2f} ms, Test time: {:.2f} ms".format((forward_time / total_steps) * 1000.0, (backward_time / total_steps) * 1000.0, (test_time / total_steps) * 1000.0))
