@@ -1,5 +1,26 @@
 # GameNet
 
+To start training run:
+
+`python a2c.py`
+
+Arguments:
+
+`--icm` train with curiosity
+
+`--scenario` specify the environment you want to train on
+
+`--save_dir` specify where your model and testing results are going to be saved
+
+For example to train a standard a2c on My Way Home scenario:
+
+`python a2c.py`
+
+To train a2c with curiosity on My Way Home Sparse scenario:
+
+`python a2c.py --icm --scenario=./scenarios/my_way_home_sparse.cfg`
+
+
 Introduction
 
 This project aims at developing a neural network trained using reinforcement learning to explore across different environments and complete a specific task. The goal is for an agent to autonomously explore an environment to discover a target with efficient exploration. Testing and evaluation of this exploration algorithm are implemented on the ViZDoom environment. This project implements the Intrinsic Curiosity Model (ICM) network as described in the paper (https://arxiv.org/pdf/1705.05363.pdf) by Pathak et. al. This model gives the agent an intrinsic reward in addition to the extrinsic reward of reaching a given target. These intrinsic rewards are given when the agent visits locations and observes visual features it has not seen before, incentivizing the agent to explore new areas. 
