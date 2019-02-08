@@ -1,5 +1,19 @@
 # GameNet
 
+# Overview
+
+## Using the Program
+
+## Introduction
+
+## Implementation
+
+## Testing Methodology and Results
+
+## Conclusions
+
+## Using the Program:
+
 To start training run:
 
 `python a2c.py`
@@ -21,18 +35,18 @@ To train a2c with curiosity on My Way Home Sparse scenario:
 `python a2c.py --icm --scenario=./scenarios/my_way_home_sparse.cfg`
 
 
-Introduction
+## Introduction:
 
 This project aims at developing a neural network trained using reinforcement learning to explore across different environments and complete a specific task. The goal is for an agent to autonomously explore an environment to discover a target with efficient exploration. Testing and evaluation of this exploration algorithm are implemented on the ViZDoom environment. This project implements the Intrinsic Curiosity Model (ICM) network as described in the paper (https://arxiv.org/pdf/1705.05363.pdf) by Pathak et. al. This model gives the agent an intrinsic reward in addition to the extrinsic reward of reaching a given target. These intrinsic rewards are given when the agent visits locations and observes visual features it has not seen before, incentivizing the agent to explore new areas. 
 
-Implementation
+## Implementation:
 
 An image of the ICM network architecture is shown below in Figure 1.
 
-<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%20Network%20Architecture.PNG" height="250" width="500">
+<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%20Network%20Architecture.PNG" height="400" width="600">
 Figure 1. Neural Network Architecture for Intrinsic Curiosity
 
-Testing Methodology and Results
+## Testing Methodology and Results:
 
 There are 5 scenarios that the algorithm is assessed on. The scenarios are divided in two subgroups: Custom scenarios and “My Way Home” scenarios. Custom scenarios are designed by the team specifically for this task, while “My Way Home” scenarios are available from the ViZDoom framework. The Custom scenarios have the same wall textures across each room, whereas the “My Way Home” scenarios have different wall textures in each room. 
 
@@ -62,7 +76,9 @@ The “My Way Home” scenarios are as follow:
 
 •	Sparse: More complicated variant of My Way Home Dense, where the agent is spawned at one location far away from the objective
 
-<img src="https://github.com/e-lab/GameNet/blob/master/images/My%20Way%20Home%20Map.png" height="200" width="200">
+Shown below in Figure 5 is the My Way Home map. For the Dense scenario, the agent can spawn at any of the blue circle indicators. However, in the sparse scenario, the agent will only spawn in the furthest left blue circle.
+
+<img src="https://github.com/e-lab/GameNet/blob/master/images/My%20Way%20Home%20Map.png" height="250" width="250">
 
 Figure 5. My Way Home Dense/Sparse Scenario Map
 
@@ -92,23 +108,23 @@ https://youtu.be/FO8I7g8z_Jw)
 
 Shown below are plots comparing performance of the Intrinsic Curiosity Model (ICM) in various mazes built in VizDoom, particularly assessing performance in mazes with various textured walls in different rooms versus uniform textures amongst rooms in mazes. In each maze, there is a target for the model, which is controlling a character in the game, to find. A model being able to consistently and repeatedly “solve” the maze is signified if the respective plot line converges to the score of 1. Data plot lines are performance averaged over roughly 10 runs of a given network in a given scenario. 
 
-![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%201%20Room.PNG)
+<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%201%20Room.PNG" height="450" width="650">
 
 Figure 6. ICM Model Performance in 1 Room Scenario
 
-![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%202%20Room.PNG)
+<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%202%20Room.PNG" height="450" width="650">
 
 Figure 7. ICM Model Performance in 2 Room Scenario
 
-![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%203%20Room.PNG)
+<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%203%20Room.PNG" height="450" width="650">
 
 Figure 8. ICM Model Performance in 3 Room Scenario
 
 In Figure 9, the limitations of the ICM model are demonstrated, because when the environment’s unique features are minimized, the model is unable to generate a substantial intrinsic reward to spur motivation across all rooms in the maze. However, as demonstrated in Figures 6-8 as well, Figure 9 demonstrates the dramatic improvement in performance of the ICM network when acting in non-uniform textured environments over uniform ones. 
 
-![alt text](https://github.com/e-lab/GameNet/blob/master/images/My%20Way%20Home.PNG)
+<img src="https://github.com/e-lab/GameNet/blob/master/images/My%20Way%20Home.PNG" height="450" width="650">
 
 Figure 9. ICM Model Performance in My Way Home, Dense and Sparse
 
 
-Conclusions
+## Conclusions:
