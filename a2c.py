@@ -206,7 +206,7 @@ if __name__ == '__main__':
                 value_list.append(value.squeeze(1))
                 workers = set_action(workers, a)
                 pool.map(step, workers)
-                reward = prep_rewards_batch(workers) / reward_scaling                                                                               
+                reward = prep_rewards_batch(workers) * reward_scaling                                                                               
                 reward_list.append(reward)           
                 unfinished, hidden = prep_finished(workers, hidden)
                 unfinished_list.append(unfinished)
@@ -216,7 +216,7 @@ if __name__ == '__main__':
                     a_out, emb_out, emb = model_icm(inp1, inp2, a_icm)       
                     a_label = a_icm.clone() 
                     prep_initial(workers, a_out, a_label, emb_out, emb)
-                    reward_intrinsic = (emb_out.detach() - emb).pow(2).mean(1) / reward_intrinsic_scaling
+                    reward_intrinsic = (emb_out.detach() - emb).pow(2).mean(1) * reward_intrinsic_scaling
                     reward += reward_intrinsic
                     ones = torch.ones(num_workers).cuda()
                     reward = torch.min(reward, ones)
