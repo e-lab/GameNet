@@ -40,15 +40,31 @@ The Custom scenarios are as follow:
 
 •	1-Room Scenario: Agent and target are spawned randomly in the same room in a single-room environment
 
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/1%20Room%20Map.jpg)
+
+Figure 2. 1 Room Scenario Map
+
 •	2-Room Scenario: Agent and target are spawned randomly in two different rooms in a two-room environment connected with corridors
 
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/2%20Room%20Map.jpg)
+
+Figure 3. 2 Room Scenario Map
+
 •	3-Room Scenario: Agent and target are spawned randomly in two different rooms in a three-room environment connected with corridors
+
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/3%20Room%20Map.png)
+
+Figure 4. 3 Room Scenario Map
 
 The “My Way Home” scenarios are as follow:
 
 •	Dense: Agent is spawned randomly in one of 17 spawn locations and must navigate the scenario to reach the target
 
 •	Sparse: More complicated variant of My Way Home Dense, where the agent is spawned at one location far away from the objective
+
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/My%20Way%20Home%20Map.png)
+
+Figure 5. My Way Home Dense/Sparse Scenario Map
 
 Shown below are videos of an agent, controlled by a neural network, exploring various mazes. In the first two videos, the agent is exploring the 2-Room Scenario. However, in the first case, the textures of the walls differ and present different features to provide a higher intrinsic reward to the agent. In the second, the textures of the walls are all the same and bare no differences visually or in terms of features to generate a significant intrinsic reward value.
 
@@ -77,17 +93,21 @@ https://youtu.be/FO8I7g8z_Jw)
 Shown below are plots comparing performance of the Intrinsic Curiosity Model (ICM) in various mazes built in VizDoom, particularly assessing performance in mazes with various textured walls in different rooms versus uniform textures amongst rooms in mazes. In each maze, there is a target for the model, which is controlling a character in the game, to find. A model being able to consistently and repeatedly “solve” the maze is signified if the respective plot line converges to the score of 1. Data plot lines are performance averaged over roughly 10 runs of a given network in a given scenario. 
 
 ![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%201%20Room.PNG)
+
 Figure 6. ICM Model Performance in 1 Room Scenario
 
 ![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%202%20Room.PNG)
+
 Figure 7. ICM Model Performance in 2 Room Scenario
 
 ![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%203%20Room.PNG)
+
 Figure 8. ICM Model Performance in 3 Room Scenario
 
 In Figure 9, the limitations of the ICM model are demonstrated, because when the environment’s unique features are minimized, the model is unable to generate a substantial intrinsic reward to spur motivation across all rooms in the maze. However, as demonstrated in Figures 6-8 as well, Figure 9 demonstrates the dramatic improvement in performance of the ICM network when acting in non-uniform textured environments over uniform ones. 
 
 ![alt text](https://github.com/e-lab/GameNet/blob/master/images/My%20Way%20Home.PNG)
+
 Figure 9. ICM Model Performance in My Way Home, Dense and Sparse
 
 
