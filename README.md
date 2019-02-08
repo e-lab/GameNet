@@ -74,5 +74,21 @@ Video Gameplay from My Way Home Dense, Uniform Textures:
 [![Watch the video](https://img.youtube.com/vi/FO8I7g8z_Jw/hqdefault.jpg)](
 https://youtu.be/FO8I7g8z_Jw)
 
+Shown below are plots comparing performance of the Intrinsic Curiosity Model (ICM) in various mazes built in VizDoom, particularly assessing performance in mazes with various textured walls in different rooms versus uniform textures amongst rooms in mazes. In each maze, there is a target for the model, which is controlling a character in the game, to find. A model being able to consistently and repeatedly “solve” the maze is signified if the respective plot line converges to the score of 1. Data plot lines are performance averaged over roughly 10 runs of a given network in a given scenario. 
+
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%201%20Room.PNG)
+Figure 6. ICM Model Performance in 1 Room Scenario
+
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%202%20Room.PNG)
+Figure 7. ICM Model Performance in 2 Room Scenario
+
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%203%20Room.PNG)
+Figure 8. ICM Model Performance in 3 Room Scenario
+
+In Figure 9, the limitations of the ICM model are demonstrated, because when the environment’s unique features are minimized, the model is unable to generate a substantial intrinsic reward to spur motivation across all rooms in the maze. However, as demonstrated in Figures 6-8 as well, Figure 9 demonstrates the dramatic improvement in performance of the ICM network when acting in non-uniform textured environments over uniform ones. 
+
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/My%20Way%20Home.PNG)
+Figure 9. ICM Model Performance in My Way Home, Dense and Sparse
+
 
 Conclusions
