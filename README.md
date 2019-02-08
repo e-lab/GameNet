@@ -43,7 +43,7 @@ This project aims at developing a neural network trained using reinforcement lea
 
 An image of the ICM network architecture is shown below in Figure 1. This predictive network incentivizes exploration of areas that result in high predictive error. As illustrated in the Figure below, the forward model takes the inputs of the current state features and the agent's action and then predicts the feature representation of the next state. The prediction of the feature representation is then compared to the ground truth, the actual feature representation. Where the prediction error of this comparison is high, the agent will receive a stronger intrinsic reward signal. This mechanism incentivizes exploration of areas with new and different features that have been previously seen. This signal, dubbed the curiosity based intrinsic reward signal, is utilized in junction with traditional external rewards to train an Advantage Actor Critic reinforcement learning network to solve a series of mazes, as described below. For further details on the methodology and implementation of this approach, please see the paper by Pathak et al. mentioned above. 
 
-<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%20Network%20Architecture.PNG" height="400" width="600">
+<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%20Network%20Architecture.PNG" height="400" width="750">
 Figure 1. Neural Network Architecture for Intrinsic Curiosity
 
 ## Testing Methodology and Results:
