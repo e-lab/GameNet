@@ -29,7 +29,7 @@ Implementation
 
 An image of the ICM network architecture is shown below in Figure 1.
 
-![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%20Network%20Architecture.PNG)
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/ICM%20Network%20Architecture.PNG = 100x100)
 Figure 1. Neural Network Architecture for Intrinsic Curiosity
 
 Testing Methodology and Results
@@ -40,19 +40,19 @@ The Custom scenarios are as follow:
 
 •	1-Room Scenario: Agent and target are spawned randomly in the same room in a single-room environment
 
-![alt text](https://github.com/e-lab/GameNet/blob/master/images/1%20Room%20Map.jpg)
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/1%20Room%20Map.jpg = 100x100)
 
 Figure 2. 1 Room Scenario Map
 
 •	2-Room Scenario: Agent and target are spawned randomly in two different rooms in a two-room environment connected with corridors
 
-![alt text](https://github.com/e-lab/GameNet/blob/master/images/2%20Room%20Map.jpg)
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/2%20Room%20Map.jpg= 100x100)
 
 Figure 3. 2 Room Scenario Map
 
 •	3-Room Scenario: Agent and target are spawned randomly in two different rooms in a three-room environment connected with corridors
 
-![alt text](https://github.com/e-lab/GameNet/blob/master/images/3%20Room%20Map.png)
+![alt text](https://github.com/e-lab/GameNet/blob/master/images/3%20Room%20Map.png = 100x100)
 
 Figure 4. 3 Room Scenario Map
 
