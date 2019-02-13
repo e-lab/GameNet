@@ -115,6 +115,8 @@ Shown below are plots comparing performance of the Intrinsic Curiosity Model (IC
 
 Figure 6. Standard A2C vs ICM Model Performance in 1 Room Scenario
 
+Figures 7 and 8 illustrate an A2C network testing performance on the 2 room and 3 room environments, both the uniformly textured and varied textured versions. The results indicate that in both of the environments, the network is able to train slightly faster towards convergence when placed in the varied texture version of the mazes over the uniform textured ones. This indicates that the A2C network intuitively trains to leverage variations in the environment that the ICM model attempts to exploit moreso. 
+
 <img src="https://github.com/e-lab/GameNet/blob/master/images/A2C%202%20Rooms.PNG" height="450" width="750">
 
 Figure 7. Standard A2C Model Performance in 2 Room Scenarios
