@@ -135,6 +135,8 @@ Figure 9. Standard A2C Model Performance in 3 Room Scenarios
 
 Figure 10. ICM Model Performance in 3 Room Scenarios
 
+[Add table summarizing approximate steps until convergence]
+
 Figure 11 and 12 demonstrate the performance of the ICM model in the My Way Home Dense and Sparse scenarios. Both of the scenarios have varied textures between rooms. Between these environments, the ICM model performs rather well, converging slightly faster in the case of the Sparse scenario. 
 Figure 13 examines the ICM model's behavior in the My Way Home Dense scenario with uniform textures throughout the environment . . .
 [Add commentary]
