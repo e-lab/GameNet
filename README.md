@@ -125,6 +125,8 @@ Figures 8 and 10 similarly demonstrate the ICM model's performance in the same r
 
 Figure 7. Standard A2C Model Performance in 2 Room Scenarios
 
+<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%202%20Rooms.PNG" height="450" width="750">
+
 Figure 8. ICM Model Performance in 2 Room Scenarios
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/A2C%203%20Rooms.PNG" height="450" width="750">
