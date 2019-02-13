@@ -145,7 +145,7 @@ Shown below in Table 1 is a summary of the results displayed in Figures 6-10 for
 | 1 Room Scenario  | A2C + ICM  | 3.0E+5  | 
 | 2 Room Scenario Uniform Textures | A2C  | ```+1.7E+06```  |    
 | 2 Room Scenario Uniform Textures | A2C + ICM  | 1.9E+6  |    
-| 2 Room Scenario Varied Textures | A2C  | ??  |    
+| 2 Room Scenario Varied Textures | A2C  | ```+1.0E+06```  |    
 | 2 Room Scenario Varied Textures | A2C + ICM  | 1.2E+6  |  
 | 3 Room Scenario Uniform Textures | A2C  | 1.2E+7  |     
 | 3 Room Scenario Uniform Textures | A2C + ICM  | ```+8.4E+6```  |     
