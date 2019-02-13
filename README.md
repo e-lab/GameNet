@@ -133,11 +133,11 @@ Figure 11 examines the ICM model's behavior in the My Way Home Dense scenario wi
 
 From testing in these My Way Home scenarios, the limitations of the ICM model were demonstrated when handling the case of the sparse scenario with uniform textured rooms. When the environment’s unique features are minimized, the model is unable to generate a substantial intrinsic reward to spur motivation across all rooms in the maze, and the model does not converge in that environment.
 
-<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Dense.PNG" height="250" width="430"> 
+<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Dense.PNG" height="450" width="750"> 
 
 Figure 9. ICM Model Performance in My Way Home Dense with Varied Texture
 
-<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Sparse.PNG" height="250" width="430">
+<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Sparse.PNG" height="450" width="750">
 
 Figure 10. ICM Model Performance in My Way Home Sparse with Varied Texture
 
