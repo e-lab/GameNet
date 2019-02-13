@@ -117,32 +117,40 @@ Figure 6. Standard A2C vs ICM Model Performance in 1 Room Scenario
 
 [Add ICM plots on 2/3 Rooms]
 
-Figures 7 and 8 illustrate an A2C network testing performance on the 2 room and 3 room environments, both the uniformly textured and varied textured versions. The results indicate that in both of the environments, the network is able to train slightly faster towards convergence when placed in the varied texture version of the mazes over the uniform textured ones. This indicates that the A2C network intuitively trains to leverage variations in the environment that the ICM model attempts to exploit moreso. 
+Figures 7 and 9 illustrate an A2C network testing performance on the 2 room and 3 room environments, both the uniformly textured and varied textured versions. The results indicate that in both of the environments, the network is able to train slightly faster towards convergence when placed in the varied texture version of the mazes over the uniform textured ones. This indicates that the A2C network intuitively trains to leverage variations in the environment that the ICM model attempts to exploit moreso. 
+
+Figures 8 and 10 similarly demonstrate the ICM model's performance in the same respective environments. 
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/A2C%202%20Rooms.PNG" height="450" width="750">
 
 Figure 7. Standard A2C Model Performance in 2 Room Scenarios
 
+Figure 8. ICM Model Performance in 2 Room Scenarios
+
 <img src="https://github.com/e-lab/GameNet/blob/master/images/A2C%203%20Rooms.PNG" height="450" width="750">
 
-Figure 8. Standard A2C Model Performance in 3 Room Scenarios
+Figure 9. Standard A2C Model Performance in 3 Room Scenarios
 
-Figure 9 and 10 demonstrate the performance of the ICM model in the My Way Home Dense and Sparse scenarios. Both of the scenarios have varied textures between rooms. Between these environments, the ICM model performs rather well, converging slightly faster in the case of the Sparse scenario. 
-Figure 11 examines the ICM model's behavior in the My Way Home Dense scenario with uniform textures throughout the environment . . .
+<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%203%20Rooms.PNG" height="450" width="750">
+
+Figure 10. ICM Model Performance in 3 Room Scenarios
+
+Figure 11 and 12 demonstrate the performance of the ICM model in the My Way Home Dense and Sparse scenarios. Both of the scenarios have varied textures between rooms. Between these environments, the ICM model performs rather well, converging slightly faster in the case of the Sparse scenario. 
+Figure 13 examines the ICM model's behavior in the My Way Home Dense scenario with uniform textures throughout the environment . . .
 [Add commentary]
 
 From testing in these My Way Home scenarios, the limitations of the ICM model were demonstrated when handling the case of the sparse scenario with uniform textured rooms. When the environment’s unique features are minimized, the model is unable to generate a substantial intrinsic reward to spur motivation across all rooms in the maze, and the model does not converge in that environment.
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Dense.PNG" height="450" width="750"> 
 
-Figure 9. ICM Model Performance in My Way Home Dense with Varied Texture
+Figure 11. ICM Model Performance in My Way Home Dense with Varied Texture
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Sparse.PNG" height="450" width="750">
 
-Figure 10. ICM Model Performance in My Way Home Sparse with Varied Texture
+Figure 12. ICM Model Performance in My Way Home Sparse with Varied Texture
 
 [Add plot]
-Figure 11. ICM Model Performance in My Way Home Dense with Uniform Textures
+Figure 13. ICM Model Performance in My Way Home Dense with Uniform Textures
 
 ## Conclusions:
 [Add commentary]
