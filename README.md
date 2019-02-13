@@ -127,9 +127,9 @@ Figure 8. Standard A2C Model Performance in 3 Room Scenarios
 
 In Figure 9, the limitations of the ICM model are demonstrated, because when the environment’s unique features are minimized, the model is unable to generate a substantial intrinsic reward to spur motivation across all rooms in the maze. However, as demonstrated in Figures 6-8 as well, Figure 9 demonstrates the dramatic improvement in performance of the ICM network when acting in non-uniform textured environments over uniform ones. 
 
-<img src="" height="450" width="850">
+<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Dense.PNG" height="250" width="430"> <img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Sparse.PNG" height="250" width="430">
 
-Figure 9. ICM Model Performance in My Way Home, Dense and Sparse
+Figure 9. ICM Model Performance in My Way Home Dense and Sparse Scenarios with Varied Texture
 
 
 ## Conclusions:
