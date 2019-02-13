@@ -137,20 +137,20 @@ Figure 9. Standard A2C Model Performance in 3 Room Scenarios
 
 Figure 10. ICM Model Performance in 3 Room Scenarios
 
-Shown below in Table 1 is a summary of the results displayed in Figures 6-10 for the 1, 2, and 3 Room Scenarios. The performance column values are the approximate number of training steps requiring for a given network to converge to the mean test score value of 1 for the given evaluation scenario. The percent change column characterizes the differences in performance of the A2C and ICM networks on the same scenario. Where the percent change is red and negative, the ICM network performs worse than A2C. Similarly, where the percent change is green and positive, the ICM network performs better.
+Shown below in Table 1 is a summary of the results displayed in Figures 6-10 for the 1, 2, and 3 Room Scenarios. The performance column values are the approximate number of training steps requiring for a given network to converge to the mean test score value of 1 for the given evaluation scenario (lower value is better). The percent change column characterizes the differences in performance of the A2C and ICM networks on the same scenario. The performances highlighted in green indicate the network that converged faster to solve a given scenario more efficiently. In the case of the 1 Room and 2 Room scenarios, the performance of A2C and ICM are rather comparable, while the 3 Room scenarios highlight ICM's better exploratory capacity in a larger maze. Between the varied texture and uniform texture environments, the performances of ICM show that the model excels moreso in environments with high variability. Even the standard A2C model tends to perform better in the varied texture environments relative to the uniform texture ones, indicating the ICM model manages to exploit the tendency of A2C to explore new and different states of environments.
 
-| Scenario Type | Network Type | Performance (training steps) | Percent Change |
-| ------------- | ------------- | ------------- | ------------- | 
-| 1 Room Scenario  | A2C  | 2.0E+5  |      |
-| 1 Room Scenario  | A2C + ICM  | 3.0E+5  |   '''diff -66% '''   |
-| 2 Room Scenario Uniform Textures | A2C  | 1.7E+06  |     |
-| 2 Room Scenario Uniform Textures | A2C + ICM  | 1.9E+6  |     |
-| 2 Room Scenario Varied Textures | A2C  | ??  |     |
-| 2 Room Scenario Varied Textures | A2C + ICM  | 1.2E+6  |      |
-| 3 Room Scenario Uniform Textures | A2C  | 1.2E+7  |      |
-| 3 Room Scenario Uniform Textures | A2C + ICM  | 8.4E+6  |      |
-| 3 Room Scenario Varied Textures | A2C  | 1.0E+7  |      |
-| 3 Room Scenario Varied Textures | A2C + ICM  | 6.6E+6  |      |
+| Scenario Type | Network Type | Performance (training steps) | 
+| ------------- | ------------- | ------------- | 
+| 1 Room Scenario  | A2C  | ```+2.0E+5```  |      
+| 1 Room Scenario  | A2C + ICM  | 3.0E+5  | 
+| 2 Room Scenario Uniform Textures | A2C  | ```+1.7E+06```  |    
+| 2 Room Scenario Uniform Textures | A2C + ICM  | 1.9E+6  |    
+| 2 Room Scenario Varied Textures | A2C  | ??  |    
+| 2 Room Scenario Varied Textures | A2C + ICM  | 1.2E+6  |  
+| 3 Room Scenario Uniform Textures | A2C  | 1.2E+7  |     
+| 3 Room Scenario Uniform Textures | A2C + ICM  | ```+8.4E+6```  |     
+| 3 Room Scenario Varied Textures | A2C  | 1.0E+7  |   
+| 3 Room Scenario Varied Textures | A2C + ICM  | ```+6.6E+6```  |     
 
 Table 1. Summary of A2C and ICM Performance Results
 
