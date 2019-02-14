@@ -154,9 +154,8 @@ Shown below in Table 1 is a summary of the results displayed in Figures 6-10 for
 
 Table 1. Summary of A2C and ICM Performance Results
 
-Figure 11 and 12 demonstrate the performance of the ICM model in the My Way Home Dense and Sparse scenarios. Both of the scenarios have varied textures between rooms. Between these environments, the ICM model performs rather well, converging slightly faster in the case of the Sparse scenario. 
-Figure 13 examines the ICM model's behavior in the My Way Home Dense scenario with uniform textures throughout the environment . . .
-[Add commentary]
+Figures 11 and 12 demonstrate the performance of the ICM model in the My Way Home Dense and Sparse scenarios with varied textures. Both of the scenarios have varied textures between rooms. Between these environments, the ICM model performs rather well, converging slightly faster in the case of the Sparse scenario. 
+Figures 13 and 14 examine the ICM model's behavior in the My Way Home Dense and Sparse scenario again but now with uniform textures throughout the environment. As illustrated, the model is unable to repeat its successful convergence as done in the textured variants of the same environments. 
 
 From testing in these My Way Home scenarios, the limitations of the ICM model were demonstrated when handling the case of the sparse scenario with uniform textured rooms. When the environment’s unique features are minimized, the model is unable to generate a substantial intrinsic reward to spur motivation across all rooms in the maze, and the model does not converge in that environment.
 
@@ -168,8 +167,13 @@ Figure 11. ICM Model Performance in My Way Home Dense with Varied Texture
 
 Figure 12. ICM Model Performance in My Way Home Sparse with Varied Texture
 
-[Add plot]
+<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Dense%2C%20Uniform.PNG" height="450" width="750">
+
 Figure 13. ICM Model Performance in My Way Home Dense with Uniform Textures
+
+<img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Sparse%2C%20Uniform.PNG" height="450" width="750">
+
+Figure 14. ICM Model Performance in My Way Home Sparse with Uniform Textures
 
 ## 5. Conclusions:
 [Add commentary]
