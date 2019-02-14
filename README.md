@@ -39,11 +39,11 @@ To train a2c with curiosity on My Way Home Sparse scenario:
 
 ## 2. Introduction:
 
-This project aims at developing a neural network trained using reinforcement learning to explore across different environments and complete a specific task. The goal is for an agent to autonomously explore an environment to discover a target with efficient exploration. Of particular interest is developing a network capable of exploring with sparse and few external rewards, forcing the network to rely on alterior methods for exploring an environment. Testing and evaluation of this exploration algorithm are implemented on the ViZDoom environment. This project implements the Intrinsic Curiosity Model (ICM) network as described in the paper (https://arxiv.org/pdf/1705.05363.pdf) by Pathak et al. This model gives the agent an intrinsic reward in addition to the extrinsic reward of reaching a given target. These intrinsic rewards are given when the agent visits locations and observes visual features it has not seen before, incentivizing the agent to explore new areas. 
+This project aims at developing a neural network, trained using reinforcement learning, capable of exploring an environment and complete a specific task. The goal is for an agent to autonomously explore an environment to discover a target and do so as efficiently as possible. Of particular interest is developing a network capable of exploring an environment with few, if any, external rewards. Testing and evaluation of this exploration algorithm are implemented on the ViZDoom environment. This project implements the Intrinsic Curiosity Model (ICM) network as described in the paper (https://arxiv.org/pdf/1705.05363.pdf) by Pathak et al. This model gives the agent an intrinsic reward in addition to the extrinsic reward of discovering a given target in an environment. These intrinsic rewards are given when the agent visits locations and observes features it has not seen before, incentivizing the agent to explore new areas. 
 
 ## 3. Implementation:
 
-An image of the ICM network architecture is shown below in Figure 1. This predictive network incentivizes exploration of areas that result in high predictive error. As illustrated in the Figure below, the forward model takes the inputs of the current state features and the agent's action and then predicts the feature representation of the next state. The prediction of the feature representation is then compared to the ground truth, the actual feature representation. Where the prediction error of this comparison is high, the agent will receive a stronger intrinsic reward signal. This mechanism incentivizes exploration of areas with new and different features that have been previously seen. This signal, dubbed the curiosity based intrinsic reward signal, is utilized in junction with traditional external rewards to train an Advantage Actor Critic reinforcement learning network to solve a series of mazes, as described below. For further details on the methodology and implementation of this approach, please see the paper by Pathak et al. mentioned above. 
+An image of the ICM network architecture is shown below in Figure 1. This predictive network incentivizes exploration of areas that result in high predictive error. As illustrated in the Figure below, the forward model takes the inputs of the current state features and the agent's action and then predicts the feature representation of the next state. The prediction of the feature representation is then compared to the ground truth, the actual feature representation. When the prediction error of this comparison is high, the agent will receive a stronger intrinsic reward signal. This mechanism incentivizes exploration of areas with new and different features that have not been previously seen. This signal, dubbed the curiosity based intrinsic reward signal, is utilized in junction with traditional external rewards to train an Advantage Actor Critic (A2C) reinforcement learning network to solve a series of mazes, as described below. For further details on the methodology and implementation of this approach, please see the paper by Pathak et al. mentioned above. 
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%20Network%20Architecture.PNG" height="400" width="750">
 Figure 1. Neural Network Architecture for Intrinsic Curiosity
@@ -51,7 +51,7 @@ Figure 1. Neural Network Architecture for Intrinsic Curiosity
 
 ## 4. Testing Methodology and Results:
 
-There are 5 scenarios that the algorithm is assessed on. The scenarios are divided in two subgroups: Custom scenarios and “My Way Home” scenarios. Custom scenarios are designed by the team specifically for this task, while “My Way Home” scenarios are available from the ViZDoom framework. The Custom scenarios have the same wall textures across each room, whereas the “My Way Home” scenarios have different wall textures in each room. 
+There are 5 scenarios that the algorithm is assessed on. The scenarios are divided in two subgroups: Custom VizDoom scenarios and “My Way Home” scenarios. Custom scenarios are designed by the team specifically for this task, while “My Way Home” scenarios are available from the ViZDoom framework. Additionally for each of the individual scenarios, there are two variants. The environment may either have uniform wall textures, or patterns, across every room in the environment, or the environment may have varied and distinct wall textures across each room. The two variants are referred to either as the Uniform scenario or Texture scenario, respectively. In any of the scenarios, there is only one item that the agent can interact with. The agent is trained to explore the scenario, locate this external object, and interact with the item for a reward. The simulation restarts after the agent has "picked up" the item, thereby completing its task successfully. 
 
 The Custom scenarios are as follow:
 
@@ -85,7 +85,7 @@ Shown below in Figure 5 is the My Way Home map. For the Dense scenario, the agen
 
 Figure 5. My Way Home Dense/Sparse Scenario Map
 
-Shown below are videos of an agent, controlled by a neural network, exploring various mazes. In the first two videos, the agent is exploring the 2-Room Scenario. However, in the first case, the textures of the walls differ and present different features to provide a higher intrinsic reward to the agent. In the second, the textures of the walls are all the same and bare no differences visually or in terms of features to generate a significant intrinsic reward value.
+Shown below are videos of an agent, controlled by a neural network, exploring various mazes. In the first two videos, the agent is exploring the 2-Room Scenario. However, in the first case, the textures of the walls differ and present different features to provide a higher intrinsic reward to the agent. In the second, the textures of the walls are all the same and bare no differences visually or in terms of features.
 
 Video Gameplay from 2 Room Scenario, Varied Textures:
 
@@ -97,7 +97,7 @@ Video Gameplay from 2 Room Scenario, Uniform Textures:
 [![Watch the video](https://img.youtube.com/vi/gdGoK9cx1R4/hqdefault.jpg)](
 https://youtu.be/gdGoK9cx1R4)
 
-In the next two videos, the agent is attempting to solve the My Way Home Dense and My Way Home Sparse scenarios. In the My Way Home Sparse environment, the textures of the walls differ from room to room to better incentivize the agent to explore the environment. As demonstrated in the results plots, the agent fails to reach the external reward target in the My Way Home Sparse scenario with entirely uniform wall textures between the rooms. The second video is thus of the My Way Home Dense scenario with uniform wall textures throughout the entire environment. The agent is able to successfully navigate and find the external reward in this case. 
+In the next two videos, the agent is attempting to solve the My Way Home Sparse and My Way Home Dense scenarios, respectively. In the My Way Home Sparse environment, the textures of the walls differ from room to room. The second video is a demonstration of the My Way Home Dense scenario with uniform wall textures throughout the entire environment. The agent is able to successfully navigate and find the external reward in both cases. 
 
 Video Gameplay from My Way Home Sparse, Varied Textures:
 
@@ -109,33 +109,34 @@ Video Gameplay from My Way Home Dense, Uniform Textures:
 [![Watch the video](https://img.youtube.com/vi/FO8I7g8z_Jw/hqdefault.jpg)](
 https://youtu.be/FO8I7g8z_Jw)
 
-Shown below are plots comparing performance of the Intrinsic Curiosity Model (ICM) in various mazes built in VizDoom, particularly assessing performance in mazes with various textured walls in different rooms versus uniform textures amongst rooms in mazes. In each maze, there is a target for the model, which is controlling a character in the game, to find. A model being able to consistently and repeatedly “solve” the maze is signified if the respective plot line converges to the score of 1. Data plot lines are performance averaged over a minimum of 8 runs of a given network in a given scenario. The line plot indicates the average of the testing score across all of the runs, while the shaded area surrounding the line plot is the standard error associated with the average score. Figure 6 illustrates a comparison of a standard A2C network and the ICM model testing on the 1 room scenario. Both models display roughly the same behavior and training steps needed to reach convergence. 
+Shown below are plots comparing performance of the Intrinsic Curiosity Model (ICM) in various mazes built in VizDoom, particularly assessing performance in mazes with varied texture walls in different rooms versus uniform textures between rooms in mazes. In each maze, there is a target for the model, which is controlling a character in the game, to find. A model being able to consistently and repeatedly “solve” the maze is signified if the respective plot line converges to the score of 1. Data plot lines are performance averaged over a minimum of 8 runs of a given network in a given scenario. The line plot indicates the average of the testing score across all of the runs, while the shaded area surrounding the line plot is one standard error associated with the average score. Figure 6 illustrates a comparison of a standard A2C network and the ICM testing on the 1 room scenario. Both models display roughly the same behavior and training steps needed to reach convergence. 
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/A2C%2C%20ICM%201%20Room.PNG" height="450" width="750">
 
-Figure 6. Standard A2C vs ICM Model Performance in 1 Room Scenario
+Figure 6. Standard A2C vs ICM Performance in 1 Room Scenario
 
-Figures 7 and 9 illustrate an A2C network testing performance on the 2 room and 3 room environments, both the uniformly textured and varied textured versions. The results indicate that in both of the environments, the network is able to train slightly faster towards convergence when placed in the varied texture version of the mazes over the uniform textured ones. This indicates that the A2C network intuitively trains to leverage variations in the environment that the ICM model attempts to exploit moreso. 
+Figures 7 and 9 illustrate an A2C network testing performance on the 2 room and 3 room environments, with both the uniformly textured and varied textured versions. The results indicate that in both of the environments, the network is able to train slightly faster towards convergence when placed in the varied texture version of the mazes over the uniform ones. This indicates that the A2C network intuitively trains to leverage new states and features that it discovers in the environment.
 
-Figures 8 and 10 similarly demonstrate the ICM model's performance in the same respective environments. 
+Figures 8 and 10 similarly demonstrate the ICM's performance in the same respective environments. 
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/A2C%202%20Rooms.PNG" height="450" width="750">
 
-Figure 7. Standard A2C Model Performance in 2 Room Scenarios
+Figure 7. Standard A2C 
+Performance in 2 Room Scenarios
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%202%20Rooms.PNG" height="450" width="750">
 
-Figure 8. ICM Model Performance in 2 Room Scenarios
+Figure 8. ICM Performance in 2 Room Scenarios
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/A2C%203%20Rooms.PNG" height="450" width="750">
 
-Figure 9. Standard A2C Model Performance in 3 Room Scenarios
+Figure 9. Standard A2C Performance in 3 Room Scenarios
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%203%20Rooms.PNG" height="450" width="750">
 
-Figure 10. ICM Model Performance in 3 Room Scenarios
+Figure 10. ICM Performance in 3 Room Scenarios
 
-Shown below in Table 1 is a summary of the results displayed in Figures 6-10 for the 1, 2, and 3 Room Scenarios. The performance column values are the approximate number of training steps requiring for a given network to converge to the mean test score value of 1 for the given evaluation scenario (lower value is better). The percent change column characterizes the differences in performance of the A2C and ICM networks on the same scenario. The performances highlighted in green indicate the network that converged faster to solve a given scenario more efficiently. In the case of the 1 Room and 2 Room scenarios, the performance of A2C and ICM are rather comparable, while the 3 Room scenarios highlight ICM's better exploratory capacity in a larger maze. Between the varied texture and uniform texture environments, the performances of ICM show that the model excels moreso in environments with high variability. Even the standard A2C model tends to perform better in the varied texture environments relative to the uniform texture ones, indicating the ICM model manages to exploit the tendency of A2C to explore new and different states of environments.
+Shown below in Table 1 is a summary of the results displayed in Figures 6-10 for the 1, 2, and 3 Room Scenarios. The performance column values are the approximate number of training steps requiring for a given network to converge to the mean test score value of 1 for the given evaluation scenario (lower value is better). The performances highlighted in green indicate the network that converged faster to solve a given scenario more efficiently. In the case of the 1 Room and 2 Room scenarios, the performance of A2C and ICM are rather comparable, while the 3 Room scenarios highlight ICM's better exploratory capacity in a larger maze. Between the varied texture and uniform texture environments, the performances of ICM show that the model excels moreso in environments with high variability in the feature space. Even the standard A2C model tends to perform better in the varied texture environments relative to the uniform texture ones, indicating the ICM manages to increase the tendency of A2C to explore new and different states of environments.
 
 | Scenario Type | Network Type | Performance (training steps) | 
 | ------------- | ------------- | ------------- | 
@@ -152,29 +153,29 @@ Shown below in Table 1 is a summary of the results displayed in Figures 6-10 for
 
 Table 1. Summary of A2C and ICM Performance Results
 
-Figures 11 and 12 demonstrate the performance of the ICM model in the My Way Home Dense and Sparse scenarios with varied textures. Both of the scenarios have varied textures between rooms. Between these environments, the ICM model performs rather well, converging slightly faster in the case of the Sparse scenario. 
-Figures 13 and 14 examine the ICM model's behavior in the My Way Home Dense and Sparse scenario again but now with uniform textures throughout the environment. As illustrated, the model is unable to repeat its successful convergence as done in the textured variants of the same environments. Perhaps higher testing score could be achieved with longer training time, however the models in Figures 13 and 14 have been trained for 10x the number of training steps as those in Figure 11 and 12, but with little indication of improving performance.
+Figures 11 and 12 demonstrate the performance of the ICM in the My Way Home Dense and Sparse scenarios with varied textures. Both of the scenarios have varied textures between rooms. Between these environments, the ICM performs rather well, converging slightly faster in the case of the Sparse scenario. 
+Figures 13 and 14 examine the ICM's behavior in the My Way Home Dense and Sparse scenario again but now with uniform textures throughout the environment. As illustrated, the model is unable to repeat its successful convergence as done in the textured variants of the same environments. Perhaps with longer training time, the model could converge to a higher testing mean score. However the models in Figures 13 and 14 have already been trained for 10x the number of training steps as those in Figure 11 and 12, but with little indication of improving performance.
 
-From testing in these My Way Home scenarios, the limitations of the ICM model were demonstrated when handling the case of the sparse scenario with uniform textured rooms. When the environment’s unique features are minimized, the model is unable to generate a substantial intrinsic reward to spur motivation across all rooms in the maze, and the model does not converge in that environment.
+From testing in these My Way Home scenarios, the limitations of the ICM were demonstrated when handling the case of the sparse scenario with uniform textured rooms. When the environment’s unique features are minimized, the model is unable to generate a substantial intrinsic reward to spur motivation across all rooms in the maze, and the model does not converge in that environment.
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Dense.PNG" height="450" width="750"> 
 
-Figure 11. ICM Model Performance in My Way Home Dense with Varied Texture
+Figure 11. ICM Performance in My Way Home Dense with Varied Texture
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Sparse.PNG" height="450" width="750">
 
-Figure 12. ICM Model Performance in My Way Home Sparse with Varied Texture
+Figure 12. ICM Performance in My Way Home Sparse with Varied Texture
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Dense%2C%20Uniform.PNG" height="450" width="750">
 
-Figure 13. ICM Model Performance in My Way Home Dense with Uniform Textures
+Figure 13. ICM Performance in My Way Home Dense with Uniform Textures
 
 <img src="https://github.com/e-lab/GameNet/blob/master/images/ICM%2C%20My%20Way%20Home%20Sparse%2C%20Uniform.PNG" height="450" width="750">
 
-Figure 14. ICM Model Performance in My Way Home Sparse with Uniform Textures
+Figure 14. ICM Performance in My Way Home Sparse with Uniform Textures
 
 ## 5. Conclusions:
-[Add commentary]
+From this evaluation of the Intrinsic Curiosity Model, the model demonstrates similar performance to a standard Advantage Actor Critic network in low complexity scenarios but an improvement in efficiency and training time as environment complexity is increased. However in an environment without the presence of various unique features and transitions between states, the ICM struggles and fails to implement an effective exploration technique to traverse the My Way Home scenarios and find the target item. The uniform texture scenarios attempt to remove most possible changes in the feature space, thereby exploiting a weakness in the model. However, these sort of environments are not necessarily typical, and the model otherwise generalizes fairly well across the assessment scenarios, even given minimal variation in features where only the wall textures are changed. The results demonstrated above provide a baseline for improvement in performance relative to a basic A2C model and will be useful as new networks are developed and evaluated to gauge any new improvements in performance.
 
 ## 6. References:
 1. Pathak et al. "Curiosity-driven Exploration by Self-supervised Prediction." 15 May 2017. https://arxiv.org/pdf/1705.05363.pdf
