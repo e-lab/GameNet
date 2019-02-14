@@ -155,7 +155,7 @@ Shown below in Table 1 is a summary of the results displayed in Figures 6-10 for
 Table 1. Summary of A2C and ICM Performance Results
 
 Figures 11 and 12 demonstrate the performance of the ICM model in the My Way Home Dense and Sparse scenarios with varied textures. Both of the scenarios have varied textures between rooms. Between these environments, the ICM model performs rather well, converging slightly faster in the case of the Sparse scenario. 
-Figures 13 and 14 examine the ICM model's behavior in the My Way Home Dense and Sparse scenario again but now with uniform textures throughout the environment. As illustrated, the model is unable to repeat its successful convergence as done in the textured variants of the same environments. 
+Figures 13 and 14 examine the ICM model's behavior in the My Way Home Dense and Sparse scenario again but now with uniform textures throughout the environment. As illustrated, the model is unable to repeat its successful convergence as done in the textured variants of the same environments. Perhaps higher testing score could be achieved with longer training time, however the models in Figures 13 and 14 have been trained for 10x the number of training steps as those in Figure 11 and 12, but with little indication of improving performance.
 
 From testing in these My Way Home scenarios, the limitations of the ICM model were demonstrated when handling the case of the sparse scenario with uniform textured rooms. When the environment’s unique features are minimized, the model is unable to generate a substantial intrinsic reward to spur motivation across all rooms in the maze, and the model does not converge in that environment.
 
