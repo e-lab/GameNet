@@ -115,8 +115,6 @@ Shown below are plots comparing performance of the Intrinsic Curiosity Model (IC
 
 Figure 6. Standard A2C vs ICM Model Performance in 1 Room Scenario
 
-[Add ICM plots on 2/3 Rooms]
-
 Figures 7 and 9 illustrate an A2C network testing performance on the 2 room and 3 room environments, both the uniformly textured and varied textured versions. The results indicate that in both of the environments, the network is able to train slightly faster towards convergence when placed in the varied texture version of the mazes over the uniform textured ones. This indicates that the A2C network intuitively trains to leverage variations in the environment that the ICM model attempts to exploit moreso. 
 
 Figures 8 and 10 similarly demonstrate the ICM model's performance in the same respective environments. 
@@ -142,15 +140,15 @@ Shown below in Table 1 is a summary of the results displayed in Figures 6-10 for
 | Scenario Type | Network Type | Performance (training steps) | 
 | ------------- | ------------- | ------------- | 
 | 1 Room Scenario  | A2C  | ```+2.0E+5```  |      
-| 1 Room Scenario  | A2C + ICM  | 3.0E+5  | 
+| 1 Room Scenario  | ICM  | 3.0E+5  | 
 | 2 Room Scenario Uniform Textures | A2C  | ```+1.7E+06```  |    
-| 2 Room Scenario Uniform Textures | A2C + ICM  | 1.9E+6  |    
+| 2 Room Scenario Uniform Textures | ICM  | 1.9E+6  |    
 | 2 Room Scenario Varied Textures | A2C  | ```+1.0E+06```  |    
-| 2 Room Scenario Varied Textures | A2C + ICM  | 1.2E+6  |  
+| 2 Room Scenario Varied Textures | ICM  | 1.2E+6  |  
 | 3 Room Scenario Uniform Textures | A2C  | 1.2E+7  |     
-| 3 Room Scenario Uniform Textures | A2C + ICM  | ```+8.4E+6```  |     
+| 3 Room Scenario Uniform Textures | ICM  | ```+8.4E+6```  |     
 | 3 Room Scenario Varied Textures | A2C  | 1.0E+7  |   
-| 3 Room Scenario Varied Textures | A2C + ICM  | ```+6.6E+6```  |     
+| 3 Room Scenario Varied Textures | ICM  | ```+6.6E+6```  |     
 
 Table 1. Summary of A2C and ICM Performance Results
 
