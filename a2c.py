@@ -39,7 +39,7 @@ torch.manual_seed(0)
 
 learning_rate = 0.0001
 discount_factor = 0.99
-epochs = 200
+epochs = 250
 training_steps_per_epoch = 10000
 seq_len = 40
 sequences_per_epoch = training_steps_per_epoch // seq_len
@@ -132,10 +132,11 @@ def prep_initial(workers, a_out, a_label, emb_out, emb, out1, depth1, out2, dept
     mask2 = mask2.cuda()
     emb_out = emb_out * mask1
     emb = emb * mask1
-    out1 = out1 * mask2
-    depth1 = depth1 * mask2  
-    out2 = out2 * mask2
-    depth2 = depth2 * mask2      
+    if use_depth:
+        out1 = out1 * mask2
+        depth1 = depth1 * mask2  
+        out2 = out2 * mask2
+        depth2 = depth2 * mask2      
     return emb_out, emb, out1, depth1, out2, depth2 
             
 def get_scores(workers):
