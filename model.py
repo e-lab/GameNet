@@ -56,8 +56,9 @@ class DoomNet(nn.Module):
 
 
 class ICM(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, use_depth):
         super(ICM, self).__init__()
+        self.use_depth = use_depth
         self.num_classes = num_classes
         self.relu = nn.ELU(inplace=True)
         self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=2, padding=1)
@@ -72,6 +73,16 @@ class ICM(nn.Module):
         self.inverse_fc2 = nn.Linear(256, num_classes)
         self.forward_fc1 = nn.Linear(288 + num_classes, 256)
         self.forward_fc2 = nn.Linear(256, 288)
+    
+        if self.use_depth:
+            self.deconv4 = nn.ConvTranspose2d(32, 32, kernel_size=3, stride=2, padding=1)
+            self.dbn4 = nn.BatchNorm2d(32)
+            self.deconv3 = nn.ConvTranspose2d(32, 32, kernel_size = 3, stride = 2, padding = 1)
+            self.dbn3 = nn.BatchNorm2d(32)
+            self.deconv2 = nn.ConvTranspose2d(32, 32, kernel_size = 3, stride = 2, padding = 1)
+            self.dbn2 = nn.BatchNorm2d(32)
+            self.deconv1 = nn.ConvTranspose2d(32, 1, kernel_size = 3, stride = 2, padding = 1)
+            self.tanh = nn.Tanh()
 
     def forward(self, x1, x2, a):
         
@@ -84,20 +95,32 @@ class ICM(nn.Module):
         x1 = self.relu(self.bn3(self.conv3(x1)))
         x1 = self.relu(self.bn4(self.conv4(x1)))
         emb1 = x1.view(x1.size(0), 32 * 3 * 3)
+        if self.use_depth:
+            x1 = self.relu(self.dbn4(self.deconv4(x1, (6, 6))))
+            x1 = self.relu(self.dbn3(self.deconv3(x1, (11, 11))))
+            x1 = self.relu(self.dbn2(self.deconv2(x1, (21, 21))))
+            x1 = self.tanh(self.deconv1(x1, (42, 42)))
 
         x2 = self.relu(self.bn1(self.conv1(x2)))
         x2 = self.relu(self.bn2(self.conv2(x2)))
         x2 = self.relu(self.bn3(self.conv3(x2)))
         x2 = self.relu(self.bn4(self.conv4(x2)))
         emb2 = x2.view(x2.size(0), 32 * 3 * 3)
+        if self.use_depth:
+            x2 = self.relu(self.dbn4(self.deconv4(x2, (6, 6))))
+            x2 = self.relu(self.dbn3(self.deconv3(x2, (11, 11))))
+            x2 = self.relu(self.dbn2(self.deconv2(x2, (21, 21))))
+            x2 = self.tanh(self.deconv1(x2, (42, 42)))
         
-        x = torch.cat((emb1, emb2), 1)
-        x = self.relu(self.inverse_fc1(x))
-        a_out = self.inverse_fc2(x)
+        a_out = torch.randn(x1.size(0), self.num_classes)
+        if not self.use_depth:
+            x = torch.cat((emb1, emb2), 1)
+            x = self.relu(self.inverse_fc1(x))
+            a_out = self.inverse_fc2(x)
 
         x = torch.cat((emb1, a_in), 1)
         x = self.relu(self.forward_fc1(x))
         emb2_out = self.forward_fc2(x)
 
-        return (a_out, emb2_out, emb2.detach())
+        return (x1, x2, a_out, emb2_out, emb2.detach())
 

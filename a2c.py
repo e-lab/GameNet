@@ -26,6 +26,7 @@ from multiprocessing.pool import ThreadPool
 parser = ArgumentParser()
 _ = parser.add_argument
 _('--icm', action='store_true', help = 'Run with curiosity')
+_('--use_depth', action='store_true', help = 'Train curiosity embedding to predict depth')
 _('--scenario', type = str, default = './scenarios/my_way_home.cfg', help = 'set path to the scenario')
 _('--save_dir', type = str, default = './save', help = 'Save directory')
 args = parser.parse_args()
@@ -38,14 +39,18 @@ torch.manual_seed(0)
 
 learning_rate = 0.0001
 discount_factor = 0.99
-epochs = 100
+epochs = 200
 training_steps_per_epoch = 10000
-seq_len = 20
+seq_len = 40
 sequences_per_epoch = training_steps_per_epoch // seq_len
 frame_repeat = 4
 resolution = [42, 42]
+use_depth = args.use_depth
 reward_scaling = 1.0
-reward_intrinsic_scaling = 0.01
+if use_depth:
+    reward_intrinsic_scaling = 0.1
+else:
+    reward_intrinsic_scaling = 0.01
 value_loss_scaling = 0.5
 entropy_loss_scaling = 0.01
 max_grad = 40.0
@@ -56,12 +61,18 @@ model_dir = args.save_dir
 model_loadfile = "./save/model.pth"
 model_savefile = os.path.join(model_dir, "model.pth")
 
-def prep_frames_batch(workers, resolution):
-    output = torch.FloatTensor(len(workers), 3, resolution[0], resolution[1])
+def prep_frames_batch(workers):
+    output = torch.FloatTensor(len(workers), 3, workers[0].resolution[0], workers[0].resolution[1])
     for i in range(len(workers)):
         output[i] = workers[i].frame.clone()
     output = output.cuda()
-    return output
+    output_depth = None
+    if use_depth:
+        output_depth = torch.FloatTensor(len(workers), 1, workers[0].resolution[0], workers[0].resolution[1])
+        for i in range(len(workers)):
+            output_depth[i] = workers[i].depth.clone()
+        output_depth = output_depth.cuda()
+    return output, output_depth
 
 def set_action(workers, actions):
     for i in range(len(workers)):
@@ -78,7 +89,7 @@ def step(worker):
     if worker.finished:
         worker.scores.append(worker.engine.get_total_reward())
         worker.engine.new_episode()
-    worker.frame = worker.preprocess(worker.engine.get_state())
+    worker.frame, worker.depth = worker.preprocess(worker.engine.get_state())
 
 '''
 def perform_action(workers, actions):
@@ -109,11 +120,23 @@ def prep_finished(workers, hidden):
     hidden[1] = hidden[1] * mask
     return output, hidden
 
-def prep_initial(workers, a_out, a_label, emb_out, emb):
+def prep_initial(workers, a_out, a_label, emb_out, emb, out1, depth1, out2, depth2):
+    mask1 = torch.ones(len(workers), 288)
+    mask2 = torch.ones(len(workers), 1, 42, 42)
     for i in range(len(workers)):
         if workers[i].initial:
-            a_label[i] = 4
-            emb_out[i] = emb[i].clone()
+            mask1[i] = torch.zeros(288)
+            mask2[i] = torch.zeros(1, 42, 42)
+            a_label[i] = 4 
+    mask1 = mask1.cuda()
+    mask2 = mask2.cuda()
+    emb_out = emb_out * mask1
+    emb = emb * mask1
+    out1 = out1 * mask2
+    depth1 = depth1 * mask2  
+    out2 = out2 * mask2
+    depth2 = depth2 * mask2      
+    return emb_out, emb, out1, depth1, out2, depth2 
             
 def get_scores(workers):
     scores = []
@@ -138,8 +161,8 @@ if __name__ == '__main__':
     workers = []
     workers_test = []
     for i in range(num_workers):
-        workers.append(Worker(config_file_path, resolution, frame_repeat))
-        workers_test.append(Worker(config_file_path, resolution, frame_repeat))  
+        workers.append(Worker(config_file_path, resolution, frame_repeat, use_depth))
+        workers_test.append(Worker(config_file_path, resolution, frame_repeat, use_depth))  
 
     #n = game.get_available_buttons_size()
     #actions = [list(a) for a in it.product([0, 1], repeat=n)]
@@ -152,7 +175,7 @@ if __name__ == '__main__':
         model.load_state_dict(my_sd)
     else:
         model = DoomNet(len(actions))
-    model_icm = ICM(len(actions))
+    model_icm = ICM(len(actions), use_depth)
     model = model.cuda()
     model_icm = model_icm.cuda()
     #criterion = nn.SmoothL1Loss()
@@ -162,7 +185,7 @@ if __name__ == '__main__':
     optimizer_icm = torch.optim.Adam(model_icm.parameters(), lr = learning_rate)
 
     whole_batch = torch.arange(num_workers)
-    ones = torch.ones(num_workers)
+    ones = torch.ones(num_workers).cuda()
     pool = ThreadPool()
 
     print("Starting the training!")
@@ -172,6 +195,7 @@ if __name__ == '__main__':
     test_time = 0.0
     hidden = model.init_hidden(num_workers)
     inp1 = torch.randn(num_workers, 3, resolution[0], resolution[1]).cuda()
+    depth1 = torch.randn(num_workers, 1, resolution[0], resolution[1]).cuda()
     a_icm = torch.zeros(num_workers).long().cuda()
 
     for epoch in range(epochs):
@@ -195,7 +219,7 @@ if __name__ == '__main__':
             unfinished_list=[]
             forward_start_time = time()
             for t in range(seq_len):
-                inp = prep_frames_batch(workers, resolution)
+                inp, depth = prep_frames_batch(workers)
                 (policy, value, hidden) = model(inp, hidden)
                 probs = F.softmax(policy, 1)
                 log_probs = F.log_softmax(policy, 1)
@@ -213,29 +237,33 @@ if __name__ == '__main__':
 
                 if args.icm:
                     inp2 = inp
-                    a_out, emb_out, emb = model_icm(inp1, inp2, a_icm)       
+                    depth2 = depth
+                    out1, out2, a_out, emb_out, emb = model_icm(inp1, inp2, a_icm)       
                     a_label = a_icm.clone() 
-                    prep_initial(workers, a_out, a_label, emb_out, emb)
+                    emb_out, emb, out1, depth1, out2, depth2 = prep_initial(workers, a_out, a_label, emb_out, emb, out1, depth1, out2, depth2)
                     reward_intrinsic = (emb_out.detach() - emb).pow(2).mean(1) * reward_intrinsic_scaling
                     reward += reward_intrinsic
-                    ones = torch.ones(num_workers).cuda()
                     reward = torch.min(reward, ones)
                     reward_list[t] = reward
-                    #print(reward_intrinsic)                
-                    loss_inverse = nll(a_out, a_label)
+                    #print(reward_intrinsic)          
+                    if use_depth:
+                        loss_inverse = criterion(out1, depth1) + criterion(out2, depth2)
+                    else:      
+                        loss_inverse = nll(a_out, a_label)
                     loss_forward = criterion(emb_out, emb)
                     loss_icm = 0.8 * loss_inverse + 0.2 * loss_forward 
                     loss_inverse_total += loss_inverse.item()
                     loss_forward_total += loss_forward.item()
                     reward_intrinsic_total += reward_intrinsic.mean().item()
-                    inp1 = inp2        
+                    inp1 = inp2    
+                    depth1 = depth2    
                     a_icm = a             
                     optimizer_icm.zero_grad()
                     loss_icm.backward()
                     torch.nn.utils.clip_grad_norm_(model_icm.parameters(), max_grad)
                     optimizer_icm.step()
 
-            inp = prep_frames_batch(workers, resolution)
+            inp, depth = prep_frames_batch(workers)
             (_, value, _) = model(inp, hidden)
             value_list.append(value.squeeze(1))
             forward_time += (time() - forward_start_time)
@@ -280,7 +308,7 @@ if __name__ == '__main__':
             hidden_test = model.init_hidden(num_workers)
             for learning_step in trange(50, leave=False):
                 for t in range(seq_len):
-                    inp = prep_frames_batch(workers_test, resolution)
+                    inp, depth = prep_frames_batch(workers_test)
                     (policy, value, hidden_test) = model(inp, hidden_test)
                     _, a = torch.max(policy, 1)
                     workers_test = set_action(workers_test, a)
