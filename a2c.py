@@ -27,6 +27,7 @@ parser = ArgumentParser()
 _ = parser.add_argument
 _('--icm', action='store_true', help = 'Run with curiosity')
 _('--use_depth', action='store_true', help = 'Train curiosity embedding to predict depth')
+_('--use_optflow', action='store_true', help = 'Train curiosity embedding to predict optical flow')
 _('--scenario', type = str, default = './scenarios/my_way_home.cfg', help = 'set path to the scenario')
 _('--save_dir', type = str, default = './save', help = 'Save directory')
 args = parser.parse_args()
@@ -46,8 +47,9 @@ sequences_per_epoch = training_steps_per_epoch // seq_len
 frame_repeat = 4
 resolution = [42, 42]
 use_depth = args.use_depth
+use_optflow = args.use_optflow
 reward_scaling = 1.0
-if use_depth:
+if use_depth or use_optflow:
     reward_intrinsic_scaling = 0.1
 else:
     reward_intrinsic_scaling = 0.01
@@ -120,24 +122,24 @@ def prep_finished(workers, hidden):
     hidden[1] = hidden[1] * mask
     return output, hidden
 
-def prep_initial(workers, a_out, a_label, emb_out, emb, out1, depth1, out2, depth2):
-    mask1 = torch.ones(len(workers), 288)
-    mask2 = torch.ones(len(workers), 1, 42, 42)
+def prep_initial(workers, a_out, a_label, my_tensors):
+    num_tensors = len(my_tensors) // 2
+    sizes = []
+    masks = []
+    for i in range(num_tensors): 
+        sizes.append(my_tensors[i * 2].size())
+        masks.append(torch.ones(*my_tensors[i * 2].size()))
     for i in range(len(workers)):
         if workers[i].initial:
-            mask1[i] = torch.zeros(288)
-            mask2[i] = torch.zeros(1, 42, 42)
-            a_label[i] = 4 
-    mask1 = mask1.cuda()
-    mask2 = mask2.cuda()
-    emb_out = emb_out * mask1
-    emb = emb * mask1
-    if use_depth:
-        out1 = out1 * mask2
-        depth1 = depth1 * mask2  
-        out2 = out2 * mask2
-        depth2 = depth2 * mask2      
-    return emb_out, emb, out1, depth1, out2, depth2 
+            a_label[i] = a_out.size(1)
+            for j in range(num_tensors):
+                masks[j][i] = torch.zeros(*sizes[j][1:])
+    for i in range(num_tensors):
+        masks[i] = masks[i].cuda()
+    for i in range(num_tensors):
+        my_tensors[i * 2] = my_tensors[i * 2] * masks[i]
+        my_tensors[i * 2 + 1] = my_tensors[i * 2 + 1] * masks[i]  
+    return my_tensors
             
 def get_scores(workers):
     scores = []
@@ -176,7 +178,7 @@ if __name__ == '__main__':
         model.load_state_dict(my_sd)
     else:
         model = DoomNet(len(actions))
-    model_icm = ICM(len(actions), use_depth)
+    model_icm = ICM(len(actions), use_depth, use_optflow)
     model = model.cuda()
     model_icm = model_icm.cuda()
     #criterion = nn.SmoothL1Loss()
@@ -239,9 +241,25 @@ if __name__ == '__main__':
                 if args.icm:
                     inp2 = inp
                     depth2 = depth
+                    if use_optflow:
+                        f1 = torch.clamp(inp1 * 255.0 + 0.5, 0, 255).permute(0, 2, 3, 1).to('cpu', torch.uint8).numpy()
+                        f2 = torch.clamp(inp2 * 255.0 + 0.5, 0, 255).permute(0, 2, 3, 1).to('cpu', torch.uint8).numpy()
+                        flow = np.zeros((num_workers, resolution[0], resolution[1], 2), np.float32)
+                        for i in range(num_workers):
+                            fprev = f1[i]
+                            fnext = f2[i]
+                            fprev = cv2.cvtColor(fprev, cv2.COLOR_RGB2GRAY)
+                            fnext = cv2.cvtColor(fnext, cv2.COLOR_RGB2GRAY)
+                            flow[i] = cv2.calcOpticalFlowFarneback(fprev, fnext, None, 0.5, 3, 15, 3, 5, 1.2, 0) / 10.0
+                        flow = torch.from_numpy(flow.transpose((0, 3, 1, 2))).cuda()
                     out1, out2, a_out, emb_out, emb = model_icm(inp1, inp2, a_icm)       
                     a_label = a_icm.clone() 
-                    emb_out, emb, out1, depth1, out2, depth2 = prep_initial(workers, a_out, a_label, emb_out, emb, out1, depth1, out2, depth2)
+                    if use_depth:
+                        emb_out, emb, out1, depth1, out2, depth2 = prep_initial(workers, a_out, a_label, [emb_out, emb, out1, depth1, out2, depth2])
+                    elif use_optflow:
+                        emb_out, emb, out1, flow = prep_initial(workers, a_out, a_label, [emb_out, emb, out1, flow])
+                    else:
+                        emb_out, emb = prep_initial(workers, a_out, a_label, [emb_out, emb])
                     reward_intrinsic = (emb_out.detach() - emb).pow(2).mean(1) * reward_intrinsic_scaling
                     reward += reward_intrinsic
                     reward = torch.min(reward, ones)
@@ -249,6 +267,8 @@ if __name__ == '__main__':
                     #print(reward_intrinsic)          
                     if use_depth:
                         loss_inverse = criterion(out1, depth1) + criterion(out2, depth2)
+                    elif use_optflow:
+                        loss_inverse = criterion(out1, flow)
                     else:      
                         loss_inverse = nll(a_out, a_label)
                     loss_forward = criterion(emb_out, emb)
